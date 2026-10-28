@@ -1,0 +1,6 @@
+{
+  "id": "demo-search",
+  "procedure": "fill-query",
+  "operationId": "demo-query-001",
+  "arguments": { "query": "SWU evidence" }
+}

@@ -1,0 +1,25 @@
+{
+  "format": "paw-swu-pack",
+  "schemaVersion": 1,
+  "id": "demo-search",
+  "version": "0.1.0",
+  "name": "Local demo search field",
+  "scope": {
+    "origin": "http://127.0.0.1:47832",
+    "pathPrefix": "/",
+    "conditions": []
+  },
+  "roles": [
+    { "id": "query", "locator": { "selector": "#query" }, "extract": "state" }
+  ],
+  "permissions": ["read", "fill"],
+  "procedures": [
+    {
+      "id": "fill-query",
+      "parameters": ["query"],
+      "preconditions": [{ "role": "query", "state": "enabled" }],
+      "postconditions": [{ "role": "query", "state": "enabled" }],
+      "steps": [{ "kind": "fill", "role": "query", "parameter": "query" }]
+    }
+  ]
+}

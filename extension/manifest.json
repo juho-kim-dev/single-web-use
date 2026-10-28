@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "PAW SWU — Open Browser Adapter",
+  "version": "0.1.0",
+  "minimum_chrome_version": "120",
+  "description": "Explicitly bind your foreground tab for bounded observation and guarded synthetic input.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["http://127.0.0.1:47831/*"],
+  "background": { "service_worker": "worker.js", "type": "module" },
+  "action": {
+    "default_title": "SWU · connect current tab",
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}
