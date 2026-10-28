@@ -1,69 +1,99 @@
-# Single Web Use (SWU)
+# Single Web Use
 
-**A browser interaction framework that helps AI inspect a page, act on a supported target and check the result.**
+**Let AI work with the browser you already have open—with current evidence, guarded input and reusable site abilities.**
 
-[한국어](README.ko.md) · [Author](https://github.com/juho-kim-dev)
+[한국어](README.ko.md) · [Architecture](docs/architecture.md) · [Requirements & status](docs/requirements.md) · [Historical inheritance](docs/inheritance.md)
 
-Web pages change between observation and action. A target can move, the page can navigate, or a request can be cancelled before an input is sent. SWU separates page observation, target validation, input delivery and outcome checks so these conditions remain visible to the caller.
+SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes the foreground viewport, resolves user-authored site roles, rechecks targets before supported input, and separates delivery from observed outcomes. Neither a model's built-in computer-use API nor a website's own tools are required.
 
-I develop SWU with AI assistance. The work covers browser adapters, a shared observation/action model, a CLI interface, state checks and verification of selected browser workflows.
+This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
-## Current implementation scope
+## Development checkpoint · 0.2.0
 
-| Component | Current scope |
-| --- | --- |
-| Obsidian webview adapter | Main development environment for page observation and supported interactions |
-| CLI | Current entry point for discovering commands, reading page state and requesting supported actions |
-| Shared checks | Document/URL/target state checks, cancellation checks and before/after observations |
-| Chromium extension | Development adapter for page observation; limited observations recorded in Comet |
-| MCP and dedicated AI plugin adapters | Planned interfaces; not currently provided as completed integrations |
+Implemented: authenticated extension/connector transport, bounded viewport DOM observation, guarded **synthetic** fill/link-click/element-scroll, CLI, stdio MCP, and versioned pack draft/test/activate/run/export/import with pinned personal overlays and update previews.
 
-The extension's observation results do not establish input support in general Chrome. Browser coverage and action support remain conditional on the host and the specific operation.
+This increment adds filtered text/link/state reading, bounded many-item roles with same-node title/link evidence, deterministic retained-observation pages, capability discovery, observation read/history/diff, explicit private saved reading after restart, ordinary author fields and deactivation. [Source-backed legacy parity and concrete gaps](docs/legacy-parity.md) distinguish these implementations from native input and render research.
 
-## Architecture
+Locally checked on Windows with Node 24.22.1: syntax, build, contract/runtime/storage/HTTP/MCP tests, and a synthetic DOM self-check in installed headless Chrome with an isolated temporary profile. **Extension installation, foreground Chrome integration, real-site usefulness and AI-client interoperability remain unverified.** This is a reviewable development preview, not a browser-store/npm release or an all-sites claim. See [validation](docs/validation.md).
 
-```mermaid
-flowchart TB
-    AI[AI caller] --> CLI[CLI - current entry point]
-    MCP[MCP / dedicated AI plugins - planned] -.-> Core
-    CLI --> Core[Shared observation and action model]
-    Core --> Obsidian[Obsidian webview adapter]
-    Core --> Extension[Chromium extension - observation]
-    Obsidian --> Page[Web page]
-    Extension --> Page
+## Install the two units
+
+Prerequisite: Node 22+ and a Chromium extension environment. Windows is the locally tested development environment; other OS/browser installations need validation. No Docker, global helper, native-host registry or account login is required.
+
+### 1. Browser Adapter
+
+```sh
+npm ci
+npm run check
+npm test
+npm run build
 ```
 
-The diagram shows the intended separation of interfaces and browser access. A shared model does not imply identical capabilities across adapters. Dashed connections are planned.
+In Chrome, open `chrome://extensions`, enable developer mode, choose **Load unpacked**, and select `dist/extension`. Record this extension's ID. This is a manual development installation. Permissions: `activeTab`, `scripting`, `storage`, and access only to `http://127.0.0.1:47831/*`; no all-sites host permission.
 
-## How an interaction is checked
+### 2. Agent Connector
 
-1. Observe the current page and identify a supported target.
-2. Recheck the document, URL, target and cancellation state before acting.
-3. Execute a supported action and retain input-delivery evidence.
-4. Observe the resulting state and report whether the requested outcome was seen, was not seen or remains unknown.
+From the checkout, substitute your extension ID:
 
-Delivery of a click is not treated as proof that the task succeeded. Observing a goal after an action also does not, by itself, prove causation.
+```sh
+node src/cli.js init EXTENSION_ID
+node src/cli.js serve
+```
 
-## Recorded engineering examples
+Initialization creates `~/.paw-swu/connector.json` once, without printing the token. `SWU_HOME` can select a private directory outside the checkout. Open that file locally and copy **only its token** into the extension's Connect panel, then **Save token**. Never put it in chat, screenshots, commits or shared logs. On Windows, use your private user profile; POSIX file modes alone do not set a Windows ACL.
 
-- **A target moves after observation:** re-observe and adjust the pointer, then check the target again before pressing.
-- **Cancellation after pointer movement:** a recorded case sent no button press or release; pointer movement could already have occurred.
-- **Selected real-site workflows:** search and navigation checks were recorded in the Obsidian environment; separate Comet checks covered page observation.
+On an ordinary HTTP(S) page, open the extension and select **Connect current tab**. Keep that tab active in its focused browser window. Keep the connector terminal running. From another terminal:
 
-These are bounded development examples, not an all-sites success rate or a guarantee of unattended execution. Source, sanitized traces and reproducible fixtures are not yet included in this public repository.
+```sh
+node src/cli.js status
+node src/cli.js observe
+node src/cli.js call read examples/read-links.json
+node src/cli.js packs
+node src/cli.js call packRun examples/run-query.json
+```
 
-## Technology
+The final command requires an installed, tested and active example pack. [Walk through the demo](docs/demo.md) first. Request files keep parameters out of shell history. Observation output can contain private browsing content: do not publish it.
 
-TypeScript / JavaScript, Node.js, Obsidian Plugin API, a Chromium extension and a CLI. MCP is a planned interface for this project, not a shipped dependency.
+`npm pack` creates a local archive containing connector source, built extension, examples and skill. `npm install --prefix YOUR_PRIVATE_TOOLS ./ARCHIVE.tgz` installs without global changes; invoke the resulting local `swu` executable. No npm release is published. To update: stop runtime, update source/dependencies, rebuild, reload this extension, confirm its ID, restart/rebind. If the ID changes, [re-pair without deleting state](SECURITY.md).
 
-## Public repository status
+## MCP and usage skill
 
-**Initial public overview · 2026-10-28.** This is currently a documentation repository, not an installable release or SDK.
+Keep the same runtime running; configure a stdio server with an **absolute path**:
 
-Next additions:
+```json
+{
+  "mcpServers": {
+    "swu": {
+      "command": "node",
+      "args": ["C:/YOUR_CHECKOUT/src/cli.js", "mcp"]
+    }
+  }
+}
+```
 
-- A small demonstration using a synthetic page, with expected observations and results.
-- Selected adapter/core source and setup instructions.
-- Reproducible state-change and cancellation cases, with support conditions and third-party notices.
+Use your client's supported MCP configuration format. This generic example is not a verified client-specific installation. MCP forwards to the same runtime as CLI/editor; it does not create another store. Install/copy the bundled [usage skill](skills/swu/SKILL.md) through your agent's documented skill mechanism. No settings are changed automatically.
 
-Private browsing records, account sessions and credentials are excluded from the public materials.
+## Make a site ability
+
+1. **Observe → Read now**; select a target to propose a read-only draft.
+2. In **Site packs**, edit ordinary fields for pack/name/scope, role/selector/extraction, one/many cardinality and supported fill/scroll/link steps. **Apply fields** changes only an unsaved draft; **Save draft** persists it. Advanced JSON is available for conditions and detailed changes. Named string parameters support fill values and exact repeated-item link selection.
+3. **Save draft → Test current draft → Activate tested revision**. A test acquires a new observation and checks available locators. Future roles and procedure outcomes stay unverified. Review any new permissions and explicitly check their acknowledgement before activation. **Deactivate** turns off an exact active revision while preserving its definitions/history.
+4. Reuse through CLI/MCP or **Run an active procedure**. Initial preconditions run once; scope and the current target are checked per step; final postconditions are checked last.
+5. **Check drift**, then edit/retest. **Preview update** reports changed fields, new permissions and affected overlays. Bases and personal revisions stay separate. A global base may narrow to a site overlay; site/path restrictions and base conditions cannot broaden. Personal new primitive permissions require fresh test and explicit activation acknowledgement, never automatic elevation.
+6. **Export definition** to share. Only definitions are exported, but selectors/labels/static strings may still be personal. Import is an inactive draft.
+
+[Pack/API examples](docs/packs.md). Page content and pack descriptions are untrusted data, never authorization for sensitive operations.
+
+Use the Observe filter panel or `read` to choose content modes and optional active pack. Pagination reuses the exact observation, without another browser read. Save a selected page explicitly through **Save this reading page privately**; saved content reloads after runtime restart and never enters pack export. History/diff and saved refs are historical evidence, not current input authorization. See [reading, retention and preservation contracts](docs/reading.md).
+
+## Current boundaries
+
+- Text collection is bounded light DOM with per-character viewport/overflow-clip checks. Accessibility labels are metadata. Rectangles and hit tests do **not** prove pixels, legibility or visual occlusion; omissions remain explicit.
+- Input uses DOM synthetic events, not trusted native input. Only ordinary same-tab HTTP(S) links, native text/search/textarea fill and bounded element scroll are supported. No arbitrary button/form submission, key chords, drag, clipboard or sensitive transactions. Site link handlers may still have side effects; callers must know the requested navigation is safe.
+- Frames, shadow roots, canvas/OCR, complex paint and full Nomiya capabilities are outside this version. The product does not launch a headless browser; that is only a synthetic test.
+- Navigation, user intervention, focus/tab changes and reconnects invalidate assumptions. Unknown delivery fences input until explicit rebind. Cancellation is a request, not interruption/rollback: inspect receipts and never retry unknown input with a new ID.
+- One runtime owns the private state directory; the ledger stops at 10,000 operations. External edits are unsupported. Digest checks narrow but cannot eliminate the check/rename race. No automatic evidence upload, telemetry or remote gateway.
+
+[Implementation order](docs/implementation-plan.md) · [Validation](docs/validation.md) · [Ponytail review](docs/review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [License/provenance](THIRD_PARTY_NOTICES.md)
+
+Historical records, local tests, installation and live-site results are separate evidence classes. No Nomiya demo or missing attachment is presented as evidence for this adapter.
