@@ -50,6 +50,8 @@ export class StateStore {
       if (e.code !== "ENOENT") throw e;
     }
     if (!this.data.packs || !this.data.operations) throw Error("invalid-state");
+    if (this.data.paused !== undefined && typeof this.data.paused !== "boolean")
+      throw Error("invalid-pause-state");
     this.data.contents ??= {};
     for (const key of [
       ...Object.keys(this.data.packs),

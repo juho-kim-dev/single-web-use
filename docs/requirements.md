@@ -72,3 +72,12 @@ R21/R22 continuations now pin observation + stored/effective definition revision
 | R31 | No silent gaps hidden behind broad parity claims | legacy-api-inventory.md enumerates all92 entries of the inspected Nomiya catalog with counterparts and boundaries. Catalog/dispatcher inspection is not all-function behavioral verification; inaccessible historical sources remain separate. |
 
 0.2.0 was independently checked and merged through PR2 at main0ace8e7. This next increment preserves [skip ci], no CI restart, private originals and the same live-verification gate.
+
+## 0.4.0 acceptance additions
+
+| ID | Requirement | Implementation and evidence |
+|---|---|---|
+| R32 | Explicit durable global pause, separate from individual cancel and disconnect | Runtime control queue, immediate pause gate, request/capture epochs, invalidated input refs and preserved historical reading; control-lifecycle.test.js checks pending/unleased/leased work, fast resume, late replies, restart and persistence failure. No native release or page rollback claim. |
+| R33 | Preserve pack versions while archiving or restoring | Archive checks exact draft/active state; unarchive and chosen revision restore return inactive, clear prior tests and require fresh test/activation. Original definitions/pinned bases survive. Existing Nomiya file backup semantics are compared explicitly, not presented as format compatibility. |
+
+The0.3 increment was reviewed and published through PR3 as main deecb7e. Public source delivery is confirmed; installed/live/browser/client evidence is still unverified. Details: [control and lifecycle](control-and-lifecycle.md).

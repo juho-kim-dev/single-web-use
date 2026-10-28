@@ -38,7 +38,10 @@
         <div class="actions">
           <button id="bind" class="primary">Connect current tab</button
           ><button id="disconnect">Disconnect</button>
+          <button id="pauseRuntime">Pause all browser work</button>
+          <button id="resumeRuntime">Resume · require fresh observation</button>
         </div>
+        <p id="controlStatus" role="status">Read connector control status before input.</p>
         <p class="note">
           Only the active tab in a focused window can be used. Input is
           synthetic. Credentials and sensitive transactions are outside
@@ -125,6 +128,14 @@
           <button id="overlay">New personal overlay from loaded base</button>
         </div>
         <p id="revisionStatus" role="status">No definition loaded</p>
+        <label for="restoreRevision">Stored revision to restore as inactive draft</label>
+        <select id="restoreRevision"><option value="">Load a pack first</option></select>
+        <div class="actions">
+          <button id="archivePack">Archive loaded pack</button>
+          <button id="unarchivePack">Return from archive · inactive</button>
+          <button id="restorePack">Restore selected revision · inactive</button>
+        </div>
+        <p class="note">Versions remain preserved. Archiving a base does not disable separately active pinned overlays. Restore does not undo website changes.</p>
         <h2>Author a role and procedure</h2>
         <div id="authorFields">
           <label for="authorId">Pack ID</label><input id="authorId" />

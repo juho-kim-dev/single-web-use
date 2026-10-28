@@ -289,6 +289,7 @@ export const readOptions = z
   .strict();
 export const apiSchemas = {
   status: z.object({}).strict(),
+  pause: z.object({ paused: z.boolean() }).strict(),
   observe: z.object({ read: readOptions.optional() }).strict(),
   read: readOptions.extend({ observationId: id.optional() }).strict(),
   capabilities: z
@@ -346,6 +347,11 @@ export const apiSchemas = {
     })
     .strict(),
   packDeactivate: z.object({ id, expected: revision }).strict(),
+  packArchive: z
+    .object({ id, expected: revision, expectedActive: revision.nullable() })
+    .strict(),
+  packUnarchive: z.object({ id, expected: revision }).strict(),
+  packRestore: z.object({ id, expected: revision, revision }).strict(),
   packContext: z
     .object({
       observationId: id,

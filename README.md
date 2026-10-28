@@ -8,7 +8,9 @@ SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes 
 
 This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
-## Development checkpoint · 0.3.0
+## Development checkpoint · 0.4.0
+
+Global pause/resume now persists and invalidates queued work/old input evidence without clearing unknown delivery. Packs can be archived, returned inactive or restored to a preserved revision, with fresh test/activation required. [Control and lifecycle contracts](docs/control-and-lifecycle.md).
 
 Implemented: authenticated extension/connector transport, bounded viewport DOM observation, guarded **synthetic** fill/link-click/element-scroll, CLI, stdio MCP, and versioned pack draft/test/activate/run/export/import with pinned personal overlays and update previews.
 

@@ -208,6 +208,7 @@ export class Packs {
         installed: [],
       };
       if (p.draft !== expected) throw Error("draft-conflict-reload-required");
+      if (p.archivedAt) throw Error("pack-archived-unarchive-first");
       p.revisions[revision] = pack;
       p.created[revision] ??= Date.now();
       p.draft = revision;
@@ -217,8 +218,9 @@ export class Packs {
   }
   async recordTest(id, revision, observation) {
     const p = this.get(id);
+    if (p.archivedAt) throw Error("pack-archived-unarchive-first");
     if (p.draft !== revision) throw Error("test-requires-current-draft");
-    if (observation.at <= p.created[revision])
+    if (observation.at <= Math.max(p.created[revision], p.restoredAt ?? 0))
       throw Error("new-observation-required");
     const context = assess(this.effective(id, revision), observation, revision);
     const report = {
@@ -259,6 +261,7 @@ export class Packs {
     return this.store.change((s) => {
       const p = s.packs[id],
         t = p?.tests[revision];
+      if (p?.archivedAt) throw Error("pack-archived-unarchive-first");
       if (
         p?.draft !== revision ||
         !t?.pass ||
@@ -282,6 +285,59 @@ export class Packs {
       if (!p || p.active !== expected) throw Error("active-revision-conflict");
       p.active = null;
       return { id, active: null, preserved: true };
+    });
+  }
+  async archive(id, expected, expectedActive) {
+    return this.store.change((s) => {
+      const p = s.packs[id];
+      if (!p || p.draft !== expected || p.active !== expectedActive)
+        throw Error("pack-lifecycle-conflict-reload-required");
+      p.archivedAt ??= Date.now();
+      p.active = null;
+      return {
+        id,
+        archived: true,
+        active: null,
+        preserved: true,
+        meaning: "pinned-overlays-keep-their-base-definition; no-page-rollback",
+      };
+    });
+  }
+  async unarchive(id, expected) {
+    return this.store.change((s) => {
+      const p = s.packs[id];
+      if (!p || p.draft !== expected || !p.archivedAt)
+        throw Error("pack-lifecycle-conflict-reload-required");
+      delete p.archivedAt;
+      p.active = null;
+      p.tests = {};
+      p.restoredAt = Date.now();
+      return {
+        id,
+        archived: false,
+        draft: p.draft,
+        active: null,
+        requires: "fresh-test-and-explicit-activation",
+      };
+    });
+  }
+  async restore(id, expected, revision) {
+    this.definition(id, revision);
+    return this.store.change((s) => {
+      const p = s.packs[id];
+      if (p.draft !== expected || p.archivedAt)
+        throw Error("pack-lifecycle-conflict-reload-required");
+      p.draft = revision;
+      p.active = null;
+      p.tests = {};
+      p.restoredAt = Date.now();
+      return {
+        id,
+        draft: revision,
+        active: null,
+        preserved: true,
+        requires: "fresh-test-and-explicit-activation",
+      };
     });
   }
   context(observation, options = { offset: 0, limit: 4, maxBytes: 65536 }) {
