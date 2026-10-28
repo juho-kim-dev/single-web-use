@@ -5,7 +5,7 @@ Environment: Windows, Node 24.22.1, locked Zod 4.6.7. Tests use temporary privat
 | Check | Actual result / meaning |
 |---|---|
 | `npm run check` | JavaScript syntax checks across source, adapter, scripts and tests; not TypeScript/static semantic verification |
-| `npm test` | 0.1.0 checkpoint:25 pass; 0.2.0 increment:36 pass/0 failed/0 skipped at final review; synthetic Chrome is not live verification |
+| `npm test` | Current repair:43 pass/0 failed/0 skipped in normal concurrent suite; two simultaneously running full suites also43/43 each. Historical local counts are not independent verification; synthetic Chrome is not live verification |
 | `npm run build` | Copies an installable unpacked manifest/module/popup tree into ignored `dist/extension`; connector runs from source |
 | `npm audit` | Installed Zod updated from vulnerable initial selection to fixed 4.6.7; zero known reported vulnerabilities at check time |
 | `npm pack --dry-run` | Verify allowlisted distribution contents; no private `.local`, runtime state, test profiles or node_modules |
@@ -17,9 +17,13 @@ Tests cover strict schemas/references/permissions, draft conflicts, fresh revisi
 
 0.2.0 adds `reading.test.js`: extract-specific filtered payloads, single/many/ambiguous/missing/truncated roles, descendant segment order and source evidence, same-observation pagination, byte refusal, observation history/diff compatibility, private save/restart/count/byte bounds, original-definition digest preservation, exact repeated-item URL selection, isolated draft selectors, deactivate, global→site overlay and explicit permission acknowledgement. Browser fixture now checks real DOM nested span→same-link composition and stable same-document refs. `editor.js` ordinary field composition is tested without a second store; foreground visual/extension interaction is still unverified.
 
+Independent supervisor verification of earlier5ce8ee8 failed23/25 with readiness timeouts and after-test persistence rejections. This actual failure is preserved, not superseded by earlier local green runs. The repaired harness uses wall-clock readiness and drains requests/store before deleting state; the timeout test controls expiry after lease without changing production semantics. `supervisor-repairs.test.js` adds slow preparation/teardown,900-item pagination, exact read/context/draft revision pinning across activation/deactivation, truncated condition/duplicate target refusal, max-condition overlay creation and64-role×300-node context-size regressions. Only the earlier checkpoint is on draft PR2; no main/CI/release result is claimed.
+
 ## Source relationship evidence
 
 Graphify local AST analysis is kept only in owned ignored versioned output: `.local/graphify/` for0.1.0 and `.local/graphify-020/` for0.2.0. Source SHA-256 lists are compared before/after; base commit and dirty tree are recorded. No vault, private capture or semantic LLM extraction is used; extraction tokens are zero. Raw extraction, directed graph, diagnostics, report and HTML are retained there. It is navigation evidence, not runtime proof. The0.2.0 graph has116 nodes/270 edges from13 source/extension JS files;13 same-endpoint relation variants collapse in the generated DiGraph (0 missing/dangling/self-loop edges). Consult raw edges for shared `contains`/`calls` endpoints. HTML visual inspection was not performed; heuristic token estimates are not a measured model/cost benchmark.
+
+The repair successor uses `.local/graphify-repair/`:117 nodes/273 edges from the same13 source/extension files, source hashes equal before/after; base commit plus dirty state retained and final checkpoint annotated after commit.13 relation variants collapse, with0 missing/dangling/self-loop edges. Prior outputs are preserved; this still is not live-browser or pixel evidence.
 
 ## Foreground/live gate for supervisor
 

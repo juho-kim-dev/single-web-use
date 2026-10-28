@@ -2,6 +2,8 @@
 
 Reference: Nomiya source at `fcfbe5a197b688b1640766b67d4d79b6e505f683` (0.17.3), relevant sections of `docs/API.md` and connected source bodies. This table reports inspected implementation responsibilities. An API name or code body is **not** proof of all-site success. Historical Obsidian/Comet results do not validate this new Chromium adapter. No original host code, private archive links or private capture text is published here.
 
+Current repair evidence: `supervisor-repairs.test.js` covers exact historical definition continuations,900-item pagination, clipped-condition/target refusal, original overlay predicates and public summary byte bounds. The earlier independently failing harness is documented in review/validation, with correction rather than a retry-to-green claim. [Concrete next increments](implementation-plan.md#concrete-next-capability-increments-and-evidence-gates) separately order native ownership/release, arrival, accumulated documents, regrounding, migration and render research, including dependency/live/source gates.
+
 | Legacy family / inspected source and functions | PAW increment and concrete local evidence | Remaining implementation / live gate |
 |---|---|---|
 | Purpose-based discovery: `src/api-catalog.ts:listApiCommands`, `src/ai-interface.ts:describeAIInterface,listStructureActions` | `Runtime.capabilities`, MCP strict schema discovery; purpose filters, primitive limits, active procedure string-argument schemas and blocked reasons; `test/reading.test.js`, `test/transport.test.js` | No automatic site semantic inference. Available-at-capture is not input authorization. Client/live discovery usability unverified |

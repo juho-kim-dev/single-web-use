@@ -44,3 +44,19 @@ The implementation reuses one StateStore, strict schemas, Node primitives and ex
 Verdict: Ship the formatted **local increment for independent supervisor review**, not a public release or live-browser certification.
 
 Not checked: foreground installed extension and author UI visual/accessibility behavior, actual sites/AI clients, non-Windows support and unavailable Sakaba/gen3 bodies. Native pointer/keys/hover/wheel routing, arrival waiting, accumulated PageDocument, fingerprint migration and render research remain concrete missing API families in legacy-parity.md.
+
+## Independent supervisor failure and repair · base c7ff956 · 2026-10-29
+
+The supervisor's fresh checkout of exact `5ce8ee8` passed npm ci/check but its first normal concurrent npm test failed:25 total,23 passed,2 failed,0 skipped. The child receipt-save regression and cancel/timeout regression hit `expected-pending-command`, then emitted asynchronous persistence errors after test completion. Build was not run in that independent attempt. This is preserved as a known-failing DRAFT checkpoint result, not overwritten by earlier local green runs; only that earlier checkpoint was published to draft PR2, without main/CI/release integration.
+
+Root cause: the harness waited only30 zero-delay ticks while fsync/concurrent Chrome/CLI preparation could take longer. It also allowed live promises to outlast temporary-state deletion. The repair uses a5-second wall-clock readiness predicate; timeout tests lease the actual command before advancing a test clock through its real callback. Fixture teardown blocks new commands, disconnects, settles tracked requests/runtime/store queues, then removes temporary files. A slow120ms preparation + unawaited-request cleanup regression proves the old wait/teardown ordering is replaced. Production Runtime timeout/no-retry semantics are unchanged. The ordinary concurrent suite passes, plus two complete suites run simultaneously under additional ordinary load, each43/43 with no skip or late unhandled rejection.
+
+Connected boundary repairs reviewed across read/assess/packTest/context/conditions/runPack/capabilities/editor:
+
+- Offset already reached6400 in c7ff956; a new900-item test proves returned continuations beyond300 remain valid.
+- Read and all context/draft extraction continuations now pin exact stored revision/effective hash. Update/deactivation cannot silently substitute an active definition; historical refs still confer no input authority.
+- Conditions require one actual observed candidate with no known truncation; many/limit1 with a second differently enabled/value/text candidate remains unknown. Known duplicate hrefs beyond limit also block input; discovery reports the same search-truncated reason.
+- Public assess/context/test responses carry bounded summaries/ref samples rather than repeated raw nodes or inline extracted bodies. Context adds count/byte pages, explicit over-budget refusal, coverage and exact-revision read/raw-evidence routes. The64-role×300-node ambiguous multiplication has a direct size/shape regression.
+- Popup overlay creation uses the tested editor helper with empty overlay-owned conditions; all8 base predicates survive composition exactly once. Originals, permission acknowledgement and global→site restrictions remain intact.
+
+Verdict: hand off the repaired local commit for exact independent revalidation. This does not mark the overall SWU request, browser installation, live sites or missing legacy families complete. No new service, production timeout policy, permission expansion, arbitrary eval or ancestor innerText path was added.

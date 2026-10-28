@@ -4,6 +4,8 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { StateStore } from "../src/storage.js";
 import { Runtime } from "../src/runtime.js";
+import { setTimeout as pause } from "node:timers/promises";
+const realPause = pause;
 export function observation(overrides = {}) {
   return {
     id: randomUUID(),
@@ -70,19 +72,55 @@ export function pack(overrides = {}) {
     ...overrides,
   };
 }
-export async function fixture(t, timeout = 100) {
+export async function fixture(t, timeout = 5000) {
   const root = await mkdtemp(path.join(os.tmpdir(), "paw-swu-test-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
   const store = new StateStore(root);
   await store.init();
   const runtime = new Runtime(store, timeout);
+  const tasks = new Set(),
+    call = runtime.call.bind(runtime),
+    command = runtime.command.bind(runtime);
+  let closing = false;
+  runtime.call = (...args) => {
+    const task = call(...args);
+    tasks.add(task);
+    task.then(
+      () => tasks.delete(task),
+      () => tasks.delete(task),
+    );
+    return task;
+  };
+  runtime.command = (...args) => {
+    if (closing) throw Error("fixture-closing");
+    return command(...args);
+  };
+  let cleaning;
+  const cleanup = () =>
+    (cleaning ??= (async () => {
+      closing = true;
+      runtime.disconnect("fixture-teardown");
+      await Promise.allSettled([...tasks]);
+      await runtime.queue;
+      await store.queue;
+      await rm(root, { recursive: true, force: true });
+    })());
+  t.after(cleanup);
   const { session } = runtime.bind({ tabId: 1, windowId: 2 });
-  return { root, store, runtime, session };
+  return { root, store, runtime, session, cleanup };
 }
 export const tick = () => new Promise((r) => setTimeout(r, 0));
+export async function waitFor(
+  predicate,
+  description = "expected-pending-command",
+) {
+  const deadline = performance.now() + 5000;
+  while (!predicate()) {
+    if (performance.now() >= deadline) throw Error(description);
+    await realPause(5);
+  }
+}
 export async function pending(runtime) {
-  for (let i = 0; i < 30 && !runtime.pending; i++) await tick();
-  if (!runtime.pending) throw Error("expected-pending-command");
+  await waitFor(() => runtime.pending && !runtime.pending.leased);
   return runtime.poll(runtime.session).command;
 }
 export const action = (o) => ({

@@ -1,4 +1,14 @@
 // Build a draft only; saving, testing and activation remain separate runtime calls.
+export function createOverlay(base, revision, id, origin = base.scope.origin) {
+  return {
+    ...structuredClone(base),
+    id,
+    name: base.name + " personal",
+    extends: { id: base.id, revision },
+    scope: { ...structuredClone(base.scope), origin, conditions: [] },
+    procedures: [],
+  };
+}
 export function editDefinition(current, fields) {
   const pack = structuredClone(
     current ?? {

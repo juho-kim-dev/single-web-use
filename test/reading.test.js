@@ -186,7 +186,12 @@ test("many roles extract same-item descendant title/link, paginate immutable obs
   assert.equal(missing.items.length, 0);
   const context = runtime.packs.context(o);
   assert.equal(
-    context.matches[0].extraction[0].items[1].value.text,
+    (
+      await runtime.call(
+        "read",
+        context.matches[0].extraction[0].continuation.args,
+      )
+    ).items[1].value.text,
     "Title Two",
   );
 });

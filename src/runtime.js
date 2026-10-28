@@ -158,8 +158,17 @@ export class Runtime {
       roles = [];
     if (options.packId) {
       const p = this.packs.get(options.packId);
-      if (!p.active) throw Error("pack-not-active");
-      const pack = this.packs.effective(options.packId, p.active);
+      const revision = options.packRevision ?? p.active;
+      if (!revision) throw Error("pack-not-active");
+      const pack = this.packs.effective(options.packId, revision),
+        effectiveRevision = hash(pack);
+      if (
+        options.effectiveRevision &&
+        options.effectiveRevision !== effectiveRevision
+      )
+        throw Error("reading-effective-revision-mismatch");
+      options.packRevision = revision;
+      options.effectiveRevision = effectiveRevision;
       if (!pack.permissions.includes("read") || !applicable(pack, o))
         throw Error("pack-reading-out-of-scope-or-permission");
       const resolved = resolveRoles(pack, o);
@@ -191,6 +200,8 @@ export class Runtime {
           );
       }
     } else {
+      if (options.packRevision || options.effectiveRevision)
+        throw Error("revision-requires-pack-id");
       if (options.roles) throw Error("roles-require-pack-id");
       for (const node of o.nodes)
         for (const mode of options.kinds)
@@ -276,7 +287,7 @@ export class Runtime {
               blockedReasons.push("scope-or-initial-conditions-unconfirmed");
             const target = roles[proc.steps[0].role];
             if (target?.truncated)
-              blockedReasons.push("initial-target-search-truncated");
+              blockedReasons.push("target-search-truncated");
             if (target?.status !== "matched")
               blockedReasons.push("initial-target-unresolved");
             else if (target.nodes.length !== 1)
@@ -527,7 +538,9 @@ export class Runtime {
           role.truncated ||
           candidates.length !== 1
         ) {
-          reason = "step-target-unresolved-not-absent";
+          reason = role?.truncated
+            ? "target-search-truncated"
+            : "step-target-unresolved-not-absent";
           break;
         }
         const node = candidates[0],
@@ -809,7 +822,7 @@ export class Runtime {
           case "packDeactivate":
             return this.packs.deactivate(a.id, a.expected);
           case "packContext":
-            return this.packs.context(this.observed(a.observationId));
+            return this.packs.context(this.retained(a.observationId), a);
           case "packRun":
             return this.runPack(a);
         }

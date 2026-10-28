@@ -56,3 +56,9 @@ Supervisor corrections have direct regressions: bounded text (`browser.test.js`)
 | R28 | Known pre-injection refusal vs possible execution | worker.execute phase flag; missing binding/focus/disconnect → not-sent, scripting invocation/post-failure → unknown; `worker.test.js`; no silent focus takeover |
 
 Remaining functionality and blocked live verification are separated by API family in the Korean summary at the end of the parity table. No broad deferral statement substitutes for that mapping.
+
+## Independent repair acceptance · successor to c7ff956
+
+The fresh5ce8ee8 failure (23/25, readiness race plus after-test persistence rejection) is preserved in review/validation. The repaired normal concurrent suite and two simultaneous full-suite load runs pass43/43 each, without forced serial files, skipped tests or production timeout/no-retry changes.
+
+R21/R22 continuations now pin observation + stored/effective definition revision, including context/draft-test entry points. Offset6400 was already implemented; a900-item regression proves continuation beyond300. R25 overlay creation uses the real helper with empty own predicates; all8 inherited constraints remain once. Conditions cannot use clipped/ambiguous witnesses: totalObserved2/limit1 stays unknown; duplicate href beyond limit stays blocked, with discovery reporting truncation. Public context/test results use bounded summaries/ref samples, explicit coverage, pinned read routes and byte/count refusal, without repeated raw nodes. Saved/historical reads remain definitions-independent and never current input authority. Missing legacy families and installation/live verification are not marked complete.

@@ -1,4 +1,4 @@
-import { editDefinition } from "./editor.js";
+import { editDefinition, createOverlay } from "./editor.js";
 const $ = (id) => document.getElementById(id);
 let observation = null,
   selected = null,
@@ -248,17 +248,12 @@ action("overlay", async () => {
     baseRevision = revision;
   if (!baseRevision) throw Error("Save the base first");
   const id = "personal-" + crypto.randomUUID().slice(0, 8);
-  const pack = {
-    ...base,
+  const pack = createOverlay(
+    base,
+    baseRevision,
     id,
-    name: base.name + " personal",
-    extends: { id: base.id, revision: baseRevision },
-    scope: {
-      ...base.scope,
-      origin: observation ? new URL(observation.url).origin : base.scope.origin,
-    },
-    procedures: [],
-  };
+    observation ? new URL(observation.url).origin : base.scope.origin,
+  );
   selected = null;
   revision = null;
   expected = null;

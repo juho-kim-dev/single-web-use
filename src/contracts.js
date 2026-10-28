@@ -250,6 +250,8 @@ export const receiptSchema = z
 export const readOptions = z
   .object({
     packId: id.optional(),
+    packRevision: revision.optional(),
+    effectiveRevision: revision.optional(),
     roles: z.array(id).max(64).optional(),
     kinds: z
       .array(z.enum(["text", "link", "state"]))
@@ -311,7 +313,14 @@ export const apiSchemas = {
     })
     .strict(),
   packDeactivate: z.object({ id, expected: revision }).strict(),
-  packContext: z.object({ observationId: id }).strict(),
+  packContext: z
+    .object({
+      observationId: id,
+      offset: z.number().int().min(0).max(4096).default(0),
+      limit: z.number().int().min(1).max(16).default(4),
+      maxBytes: z.number().int().min(1024).max(524288).default(65536),
+    })
+    .strict(),
   packRun: z
     .object({
       id,

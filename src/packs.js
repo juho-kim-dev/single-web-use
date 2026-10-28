@@ -1,6 +1,6 @@
 import { packSchema } from "./contracts.js";
 import { hash } from "./storage.js";
-import { composeText, itemFor } from "./reading.js";
+import { composeText, paginate } from "./reading.js";
 
 export function applicable(pack, observation) {
   const u = new URL(observation.url);
@@ -45,7 +45,12 @@ export function resolveRoles(pack, observation) {
 export function checkConditions(conditions, roles) {
   return conditions.map((c) => {
     const role = roles[c.role],
-      n = role?.nodes.length === 1 && role.nodes[0];
+      n =
+        role?.status === "matched" &&
+        !role.truncated &&
+        role.totalObserved === 1 &&
+        role.nodes.length === 1 &&
+        role.nodes[0];
     const result =
       !n ||
       (c.state === "value" && n.value === null) ||
@@ -71,7 +76,7 @@ export function checkConditions(conditions, roles) {
     return { ...c, result };
   });
 }
-export function assess(pack, observation) {
+export function assess(pack, observation, revision = null) {
   const roles = resolveRoles(pack, observation),
     conditions = checkConditions(pack.scope.conditions, roles);
   const extraction = pack.roles.map((role) => {
@@ -80,33 +85,47 @@ export function assess(pack, observation) {
       role: role.id,
       mode: role.extract,
       status: match.status,
-      items:
-        match.status === "matched"
-          ? match.nodes
-              .slice(0, 10)
-              .map((n) => itemFor(observation, n, role.extract, role.id))
-          : [],
-      truncated: match.truncated || match.nodes.length > 10,
+      truncated: match.truncated,
       totalObserved: match.totalObserved,
-      continuation:
-        match.nodes.length > 10
-          ? {
-              method: "read",
-              args: {
-                observationId: observation.id,
-                packId: pack.id,
-                roles: [role.id],
-                offset: 10,
-              },
-            }
-          : null,
+      continuation: revision
+        ? {
+            method: "read",
+            args: {
+              observationId: observation.id,
+              packId: pack.id,
+              packRevision: revision,
+              effectiveRevision: hash(pack),
+              roles: [role.id],
+              offset: 0,
+            },
+          }
+        : null,
       observationId: observation.id,
     };
   });
   return {
     inScope: applicable(pack, observation),
-    roles,
+    roles: Object.fromEntries(
+      Object.entries(roles).map(([id, role]) => [
+        id,
+        {
+          status: role.status,
+          totalObserved: role.totalObserved,
+          truncated: role.truncated,
+          refs: role.nodes.slice(0, 16).map((n) => n.ref),
+          refsTruncated:
+            role.nodes.length > 16 || role.totalObserved > role.nodes.length,
+        },
+      ]),
+    ),
     extraction,
+    coverage: observation.coverage,
+    evidenceRead: {
+      method: "observationRead",
+      args: { observationId: observation.id },
+    },
+    inputPermission: false,
+    currentAtRead: "not-checked",
     conditions,
     pass:
       applicable(pack, observation) &&
@@ -201,7 +220,7 @@ export class Packs {
     if (p.draft !== revision) throw Error("test-requires-current-draft");
     if (observation.at <= p.created[revision])
       throw Error("new-observation-required");
-    const context = assess(this.effective(id, revision), observation);
+    const context = assess(this.effective(id, revision), observation, revision);
     const report = {
       ...context,
       pass:
@@ -220,18 +239,6 @@ export class Packs {
       // Keep validation metadata, not an unbounded automatic archive of captured page text.
       const stored = {
         ...report,
-        extraction: undefined,
-        roles: Object.fromEntries(
-          Object.entries(report.roles).map(([id, role]) => [
-            id,
-            {
-              status: role.status,
-              totalObserved: role.totalObserved,
-              truncated: role.truncated,
-              refs: role.nodes.map((n) => n.ref),
-            },
-          ]),
-        ),
       };
       s.packs[id].tests[revision] = stored;
       return stored;
@@ -277,26 +284,41 @@ export class Packs {
       return { id, active: null, preserved: true };
     });
   }
-  context(observation) {
-    const matches = [];
+  context(observation, options = { offset: 0, limit: 4, maxBytes: 65536 }) {
+    const candidates = [];
     for (const [id, p] of Object.entries(this.store.data.packs))
       if (p.active) {
         const pack = this.effective(id, p.active);
-        if (applicable(pack, observation))
-          matches.push({
-            id,
-            revision: p.active,
-            name: pack.name,
-            ...assess(pack, observation),
-            procedures: pack.procedures.map((p) => p.id),
-            evidence: "roles-inferred-from-pack; nodes-original-dom",
-          });
+        if (applicable(pack, observation)) candidates.push({ id, p, pack });
       }
+    const projected = paginate(candidates, options, ({ id, p, pack }) => ({
+      id,
+      revision: p.active,
+      name: pack.name,
+      ...assess(pack, observation, p.active),
+      procedures: pack.procedures.map((p) => p.id),
+      evidence: "roles-inferred-from-pack; nodes-original-dom",
+    }));
+    const matches = projected.items;
     const owners = {};
     for (const p of matches)
       for (const r of Object.keys(p.roles)) (owners[r] ??= []).push(p.id);
     return {
       matches,
+      page: projected.page,
+      continuation:
+        projected.page.nextOffset === null
+          ? null
+          : {
+              method: "packContext",
+              args: {
+                ...options,
+                observationId: observation.id,
+                offset: projected.page.nextOffset,
+              },
+            },
+      conflictScope: "returned-pack-page-only",
+      inputPermission: false,
       conflicts: Object.entries(owners)
         .filter(([, v]) => v.length > 1)
         .map(([role, packs]) => ({ role, packs })),

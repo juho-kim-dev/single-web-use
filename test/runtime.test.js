@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
 import { StateStore } from "../src/storage.js";
-import { observation, fixture, pending, action, tick } from "./helpers.js";
+import { observation, fixture, pending, action, waitFor } from "./helpers.js";
 test("immutable observations, lease once, durable duplicate receipt and conflicting operation rejection", async (t) => {
   const { runtime, store, session, root } = await fixture(t);
   const o = runtime.retain(observation({ session }));
@@ -30,16 +30,19 @@ test("immutable observations, lease once, durable duplicate receipt and conflict
   assert.deepEqual(reopened.data.operations, store.data.operations);
 });
 test("cancel before lease prevents input; late cancellation fences and timeout never retries", async (t) => {
-  const { runtime, session } = await fixture(t, 30),
+  const { runtime, session } = await fixture(t),
     o = runtime.retain(observation({ session })),
     a = action(o);
   const result = runtime.call("act", a);
-  for (let i = 0; i < 30 && !runtime.pending; i++) await tick();
+  await waitFor(() => runtime.pending);
   await runtime.call("cancel", { operationId: a.operationId });
   assert.equal((await result).delivery, "not-sent");
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  runtime.timeout = 30;
   const other = { ...a, operationId: "unknown-operation" },
     unknown = runtime.call("act", other);
   await pending(runtime);
+  t.mock.timers.tick(30);
   assert.equal((await unknown).delivery, "unknown");
   assert.equal(runtime.fenced, true);
   assert.equal((await runtime.call("act", other)).delivery, "unknown");
