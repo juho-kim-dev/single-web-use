@@ -23,8 +23,13 @@ test("draft requires fresh test; activation binds exact revision/session and edi
   runtime.reply(session, c.id, observation({ session, at: Date.now() + 1 }));
   assert.equal((await testResult).pass, true);
   assert.equal(
-    (await runtime.call("packActivate", { id: p.id, revision: r.revision }))
-      .active,
+    (
+      await runtime.call("packActivate", {
+        id: p.id,
+        revision: r.revision,
+        acknowledgePermissions: ["fill"],
+      })
+    ).active,
     r.revision,
   );
   const edit = await runtime.call("packDraft", {
@@ -102,7 +107,7 @@ test("complete pack procedure rechecks current roles, emits one guarded input, t
     draft.revision,
     observation({ session, at: Date.now() + 1 }),
   );
-  await runtime.packs.activate(p.id, draft.revision, session);
+  await runtime.packs.activate(p.id, draft.revision, session, ["fill"]);
   const run = runtime.call("packRun", {
     id: p.id,
     procedure: "query",

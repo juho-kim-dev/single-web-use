@@ -10,3 +10,7 @@
 8. Supervisor independent review and repairs. Supervisor alone handles remote commits/PR/publication; retain `[skip ci]`. Release/platform/client support requires separate evidence.
 
 Remaining historical files supplied later are analyzed as a follow-up; unavailable sources are never treated as inspected.
+
+## 0.2.0 completed implementation order
+
+The first reviewed local checkpoint is `5ce8ee8`. The next increment follows its same runtime/store: (1) ordered captured text and stable refs, (2) role/filter/cardinality projection + discovery, (3) retained read/history/diff, (4) explicit bounded saved pages/restart, (5) ordinary author fields + deactivation and scoped personal permission acknowledgement, (6) legacy API-family mapping and regressions, (7) formatter/check/test/build/review and ignored Graphify source hashes. Foreground extension/live gates remain separate supervisor work. This sequence does not claim missing native/arrival/accumulation/research parity complete.

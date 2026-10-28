@@ -164,3 +164,19 @@ footer span {
 [hidden] {
   display: none !important;
 }
+fieldset {
+  border: 1px solid #40555f;
+  border-radius: 8px;
+  margin: 16px 0;
+  padding: 12px;
+}
+fieldset label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px 12px 6px 0;
+}
+fieldset input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}

@@ -55,7 +55,13 @@ export const packSchema = z
     roles: z
       .array(
         z
-          .object({ id, locator, extract: z.enum(["text", "link", "state"]) })
+          .object({
+            id,
+            locator,
+            extract: z.enum(["text", "link", "state"]),
+            cardinality: z.enum(["one", "many"]).optional(),
+            limit: z.number().int().min(1).max(100).optional(),
+          })
           .strict(),
       )
       .min(1)
@@ -77,6 +83,7 @@ export const packSchema = z
                     role: id,
                     text: text.optional(),
                     parameter: id.optional(),
+                    linkParameter: id.optional(),
                     dy: z.number().int().min(-1000).max(1000).optional(),
                   })
                   .strict(),
@@ -125,6 +132,9 @@ export const packSchema = z
               (t.text === undefined) === (t.parameter === undefined)) ||
             (t.parameter !== undefined &&
               (t.kind !== "fill" || !s.parameters.includes(t.parameter))) ||
+            (t.linkParameter !== undefined &&
+              (t.kind !== "click" ||
+                !s.parameters.includes(t.linkParameter))) ||
             (t.kind === "scroll" && t.dy === undefined),
         ),
       )
@@ -148,6 +158,10 @@ export const nodeSchema = z
     label: text,
     labelSource: z.enum(["aria-label", "title", "placeholder", "none"]),
     text,
+    textSegments: z
+      .array(z.object({ order: z.number().int().nonnegative(), text }).strict())
+      .max(64)
+      .default([]),
     textEvidence: z
       .object({
         method: z.literal("range-fully-inside-viewport-and-overflow-clips"),
@@ -233,9 +247,42 @@ export const receiptSchema = z
     after: observationSchema.optional(),
   })
   .strict();
+export const readOptions = z
+  .object({
+    packId: id.optional(),
+    roles: z.array(id).max(64).optional(),
+    kinds: z
+      .array(z.enum(["text", "link", "state"]))
+      .max(3)
+      .default(["text", "link", "state"]),
+    within: id.optional(),
+    offset: z.number().int().min(0).max(6400).default(0),
+    limit: z.number().int().min(1).max(100).default(20),
+    maxBytes: z.number().int().min(1024).max(524288).default(32768),
+  })
+  .strict();
 export const apiSchemas = {
   status: z.object({}).strict(),
-  observe: z.object({}).strict(),
+  observe: z.object({ read: readOptions.optional() }).strict(),
+  read: readOptions.extend({ observationId: id.optional() }).strict(),
+  capabilities: z
+    .object({
+      observationId: id.optional(),
+      purpose: z.enum(["read", "act", "manage", "all"]).default("all"),
+    })
+    .strict(),
+  observationRead: z.object({ observationId: id }).strict(),
+  observationHistory: z.object({}).strict(),
+  observationDiff: z.object({ before: id, after: id }).strict(),
+  contentSave: z
+    .object({
+      observationId: id,
+      name: z.string().min(1).max(200),
+      read: readOptions.default({}),
+    })
+    .strict(),
+  contentList: z.object({}).strict(),
+  contentRead: z.object({ id }).strict(),
   act: actionSchema,
   operation: z.object({ operationId: id }).strict(),
   cancel: z.object({ operationId: id }).strict(),
@@ -253,7 +300,17 @@ export const apiSchemas = {
     })
     .strict(),
   packTest: z.object({ id, revision }).strict(),
-  packActivate: z.object({ id, revision }).strict(),
+  packActivate: z
+    .object({
+      id,
+      revision,
+      acknowledgePermissions: z
+        .array(z.enum(["read", "fill", "click", "scroll"]))
+        .max(4)
+        .default([]),
+    })
+    .strict(),
+  packDeactivate: z.object({ id, expected: revision }).strict(),
   packContext: z.object({ observationId: id }).strict(),
   packRun: z
     .object({

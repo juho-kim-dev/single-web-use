@@ -1,0 +1,5 @@
+{
+  "kinds": ["link"],
+  "limit": 10,
+  "maxBytes": 32768
+}

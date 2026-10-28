@@ -1,5 +1,6 @@
 import { packSchema } from "./contracts.js";
 import { hash } from "./storage.js";
+import { composeText, itemFor } from "./reading.js";
 
 export function applicable(pack, observation) {
   const u = new URL(observation.url);
@@ -11,20 +12,32 @@ export function applicable(pack, observation) {
 export function resolveRoles(pack, observation) {
   const roles = Object.create(null);
   for (const role of pack.roles) {
-    const nodes = observation.nodes.filter(
+    const found = observation.nodes.filter(
       (n) =>
         (n.locator?.selector === role.locator.selector ||
           n.matches.includes(role.locator.selector)) &&
         (role.locator.label === undefined || n.label === role.locator.label),
     );
+    const selected = found.slice(
+      0,
+      role.cardinality === "many" ? (role.limit ?? 50) : 300,
+    );
+    const nodes =
+      selected.length === 1
+        ? selected.map((n) => ({ ...n, reading: composeText(observation, n) }))
+        : selected;
     roles[role.id] = {
       status:
-        nodes.length === 1
+        found.length && role.cardinality === "many"
           ? "matched"
-          : nodes.length
-            ? "ambiguous"
-            : "not-observed",
+          : nodes.length === 1
+            ? "matched"
+            : nodes.length
+              ? "ambiguous"
+              : "not-observed",
       nodes,
+      totalObserved: found.length,
+      truncated: found.length > nodes.length || observation.coverage.truncated,
     };
   }
   return roles;
@@ -37,7 +50,10 @@ export function checkConditions(conditions, roles) {
       !n ||
       (c.state === "value" && n.value === null) ||
       (c.state === "text" &&
-        (n.textEvidence.truncated || n.textEvidence.omitted))
+        (n.reading?.truncated ||
+          n.reading?.omitted ||
+          n.textEvidence.truncated ||
+          n.textEvidence.omitted))
         ? "unknown"
         : c.state === "visible"
           ? n.exposure === "hit-tested"
@@ -47,7 +63,9 @@ export function checkConditions(conditions, roles) {
             ? !n.disabled
               ? "observed"
               : "not-observed"
-            : n[c.state] === c.equals
+            : (c.state === "text"
+                  ? (n.reading?.text ?? n.text)
+                  : n[c.state]) === c.equals
               ? "observed"
               : "not-observed";
     return { ...c, result };
@@ -57,27 +75,31 @@ export function assess(pack, observation) {
   const roles = resolveRoles(pack, observation),
     conditions = checkConditions(pack.scope.conditions, roles);
   const extraction = pack.roles.map((role) => {
-    const match = roles[role.id],
-      node = match.status === "matched" ? match.nodes[0] : null;
+    const match = roles[role.id];
     return {
       role: role.id,
       mode: role.extract,
       status: match.status,
-      value: !node
-        ? null
-        : role.extract === "text"
-          ? { text: node.text, evidence: node.textEvidence }
-          : role.extract === "link"
-            ? {
-                href: node.href,
-                evidence: "DOM-link-metadata-not-navigation-proof",
-              }
-            : {
-                disabled: node.disabled,
-                editable: node.editable,
-                states: node.states,
-                value: node.value,
+      items:
+        match.status === "matched"
+          ? match.nodes
+              .slice(0, 10)
+              .map((n) => itemFor(observation, n, role.extract, role.id))
+          : [],
+      truncated: match.truncated || match.nodes.length > 10,
+      totalObserved: match.totalObserved,
+      continuation:
+        match.nodes.length > 10
+          ? {
+              method: "read",
+              args: {
+                observationId: observation.id,
+                packId: pack.id,
+                roles: [role.id],
+                offset: 10,
               },
+            }
+          : null,
       observationId: observation.id,
     };
   });
@@ -107,6 +129,10 @@ export class Packs {
     if (!value) throw Error("revision-not-found");
     return packSchema.parse(value);
   }
+  exportDefinition(id, revision) {
+    this.definition(id, revision);
+    return structuredClone(this.get(id).revisions[revision]);
+  }
   effective(id, revision) {
     const pack = this.definition(id, revision);
     return this.compose(pack);
@@ -116,12 +142,10 @@ export class Packs {
     const base = this.definition(pack.extends.id, pack.extends.revision);
     if (base.extends) throw Error("nested-overlays-unsupported");
     if (
-      base.scope.origin !== pack.scope.origin ||
+      (base.scope.origin !== null && base.scope.origin !== pack.scope.origin) ||
       !pack.scope.pathPrefix.startsWith(base.scope.pathPrefix)
     )
       throw Error("overlay-scope-widening");
-    if (pack.permissions.some((p) => !base.permissions.includes(p)))
-      throw Error("overlay-permission-widening");
     if (
       pack.roles.some(
         (role) =>
@@ -190,13 +214,41 @@ export class Packs {
       observationId: observation.id,
       session: observation.session,
       at: Date.now(),
+      addedPermissions: this.addedPermissions(id, revision),
     };
     return this.store.change((s) => {
-      s.packs[id].tests[revision] = report;
-      return report;
+      // Keep validation metadata, not an unbounded automatic archive of captured page text.
+      const stored = {
+        ...report,
+        extraction: undefined,
+        roles: Object.fromEntries(
+          Object.entries(report.roles).map(([id, role]) => [
+            id,
+            {
+              status: role.status,
+              totalObserved: role.totalObserved,
+              truncated: role.truncated,
+              refs: role.nodes.map((n) => n.ref),
+            },
+          ]),
+        ),
+      };
+      s.packs[id].tests[revision] = stored;
+      return stored;
     });
   }
-  async activate(id, revision, session) {
+  addedPermissions(id, revision) {
+    const p = this.get(id),
+      pack = this.definition(id, revision);
+    const reference = pack.extends
+      ? this.definition(pack.extends.id, pack.extends.revision).permissions
+      : p.active
+        ? this.effective(id, p.active).permissions
+        : ["read"];
+    return pack.permissions.filter((p) => !reference.includes(p));
+  }
+  async activate(id, revision, session, acknowledgePermissions = []) {
+    const added = this.addedPermissions(id, revision);
     return this.store.change((s) => {
       const p = s.packs[id],
         t = p?.tests[revision];
@@ -207,8 +259,22 @@ export class Packs {
         Date.now() - t.at > 300000
       )
         throw Error("fresh-passing-test-required");
+      if (added.some((p) => !acknowledgePermissions.includes(p)))
+        throw Error(
+          "explicit-permission-acknowledgement-required:" + added.join(","),
+        );
       p.active = revision;
+      p.permissionAcknowledgements ??= {};
+      p.permissionAcknowledgements[revision] = [...acknowledgePermissions];
       return { id, active: revision };
+    });
+  }
+  async deactivate(id, expected) {
+    return this.store.change((s) => {
+      const p = s.packs[id];
+      if (!p || p.active !== expected) throw Error("active-revision-conflict");
+      p.active = null;
+      return { id, active: null, preserved: true };
     });
   }
   context(observation) {
@@ -263,8 +329,17 @@ export class Packs {
       .map(([id]) => id);
     return {
       id,
-      currentRevision: hash(current),
+      currentRevision: p.draft ?? p.active,
       incomingRevision: hash(incoming),
+      addedPermissions: incoming.permissions.filter(
+        (permission) =>
+          !(
+            incoming.extends
+              ? this.definition(incoming.extends.id, incoming.extends.revision)
+                  .permissions
+              : current.permissions
+          ).includes(permission),
+      ),
       conflicts,
       overlays,
       automaticMerge: false,

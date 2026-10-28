@@ -37,60 +37,75 @@ async function foreground(bound) {
   return tab;
 }
 async function execute(command) {
-  const bound = binding,
-    ownedSession = session,
-    ownedEpoch = epoch;
-  const guard = () => {
+  let injected = false;
+  try {
+    const bound = binding,
+      ownedSession = session,
+      ownedEpoch = epoch;
+    const guard = () => {
+      if (
+        !bound ||
+        binding !== bound ||
+        session !== ownedSession ||
+        command.session !== ownedSession ||
+        epoch !== ownedEpoch ||
+        Date.now() > command.deadline
+      )
+        throw Error("command-expired-or-binding-changed");
+    };
+    guard();
+    await foreground(bound);
+    guard();
+    const context = {
+      ...bound,
+      session: ownedSession,
+      deadline: command.deadline,
+    };
+    const target = {
+      tabId: bound.tabId,
+      ...(command.kind === "observe" ? { frameIds: [0] } : {}),
+    };
+    // Chrome documentId remains adapter-private; the core uses isolated collector documentId.
+    if (command.kind === "act") {
+      const chromeDocumentId = documents.get(command.args.before.id);
+      if (!chromeDocumentId) throw Error("chrome-document-binding-expired");
+      target.documentIds = [chromeDocumentId];
+    }
+    injected = true;
+    const results = await chrome.scripting.executeScript({
+      target,
+      world: "ISOLATED",
+      func: pageCommand,
+      args: [command.kind, command.args, context],
+    });
     if (
-      !bound ||
-      binding !== bound ||
-      session !== ownedSession ||
-      command.session !== ownedSession ||
-      epoch !== ownedEpoch ||
-      Date.now() > command.deadline
+      results.length !== 1 ||
+      results[0].frameId !== 0 ||
+      !results[0].documentId ||
+      results[0].error
     )
-      throw Error("command-expired-or-binding-changed");
-  };
-  guard();
-  await foreground(bound);
-  guard();
-  const context = {
-    ...bound,
-    session: ownedSession,
-    deadline: command.deadline,
-  };
-  const target = {
-    tabId: bound.tabId,
-    ...(command.kind === "observe" ? { frameIds: [0] } : {}),
-  };
-  // Chrome documentId remains adapter-private; the core uses isolated collector documentId.
-  if (command.kind === "act") {
-    const chromeDocumentId = documents.get(command.args.before.id);
-    if (!chromeDocumentId) throw Error("chrome-document-binding-expired");
-    target.documentIds = [chromeDocumentId];
+      throw Error("main-document-unconfirmed");
+    guard();
+    await foreground(bound);
+    guard();
+    const result = results[0].result;
+    if (command.kind === "observe") {
+      documents.set(result.id, results[0].documentId);
+      if (documents.size > 32) documents.delete(documents.keys().next().value);
+    }
+    return result;
+  } catch (e) {
+    if (command.kind === "act")
+      return {
+        accepted: true,
+        delivery: injected ? "unknown" : "not-sent",
+        outcome: "unknown",
+        reason: injected
+          ? "adapter-after-possible-execution-no-retry"
+          : "adapter-pre-dispatch-refusal:" + e.message,
+      };
+    throw e;
   }
-  const results = await chrome.scripting.executeScript({
-    target,
-    world: "ISOLATED",
-    func: pageCommand,
-    args: [command.kind, command.args, context],
-  });
-  if (
-    results.length !== 1 ||
-    results[0].frameId !== 0 ||
-    !results[0].documentId ||
-    results[0].error
-  )
-    throw Error("main-document-unconfirmed");
-  guard();
-  await foreground(bound);
-  guard();
-  const result = results[0].result;
-  if (command.kind === "observe") {
-    documents.set(result.id, results[0].documentId);
-    if (documents.size > 32) documents.delete(documents.keys().next().value);
-  }
-  return result;
 }
 const documents = new Map();
 const invalidate = () => {

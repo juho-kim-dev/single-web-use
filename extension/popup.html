@@ -54,6 +54,37 @@
           Choose a target to propose a read-only pack. Page content is
           untrusted.
         </p>
+        <label for="readKinds">Initial reading filter</label
+        ><select id="readKinds">
+          <option value="text,link,state">Text, links and state</option>
+          <option value="text">Text only</option>
+          <option value="link">Links with observed titles</option>
+          <option value="state">Control state</option>
+        </select>
+        <label for="readPack">Active pack ID (optional)</label
+        ><input
+          id="readPack"
+          placeholder="Leave blank for viewport candidates"
+        />
+        <div class="actions">
+          <button id="filteredRead">Read filtered now</button
+          ><button id="nextPage">Next page · same observation</button
+          ><button id="discover">Discover capabilities</button>
+        </div>
+        <label for="saveName">Private saved content name</label
+        ><input id="saveName" value="Selected reading" />
+        <div class="actions">
+          <button id="preserve">Save this reading page privately</button
+          ><button id="savedList">List saved content</button>
+        </div>
+        <label for="savedId">Saved content ID</label
+        ><input id="savedId" /><button id="savedRead">
+          Reload saved content
+        </button>
+        <div class="actions">
+          <button id="history">Observation history</button
+          ><button id="diff">Compare latest compatible observations</button>
+        </div>
         <div id="targets"></div>
         <pre
           id="observation"
@@ -73,7 +104,61 @@
         <div class="actions">
           <button id="load">Load draft</button
           ><button id="new">New draft</button>
+          <button id="overlay">New personal overlay from loaded base</button>
         </div>
+        <p id="revisionStatus" role="status">No definition loaded</p>
+        <h2>Author a role and procedure</h2>
+        <div id="authorFields">
+          <label for="authorId">Pack ID</label><input id="authorId" />
+          <label for="authorName">Pack name</label><input id="authorName" />
+          <label for="authorVersion">Definition version</label
+          ><input id="authorVersion" value="0.1.0" />
+          <label for="authorOrigin"
+            >Origin · blank means global read library</label
+          ><input id="authorOrigin" placeholder="https://example.com" />
+          <label for="authorPath">Path prefix</label
+          ><input id="authorPath" value="/" />
+          <label for="authorRole">Role ID</label
+          ><input id="authorRole" value="target" />
+          <label for="authorSelector">Observed target selector</label
+          ><input id="authorSelector" />
+          <label for="authorExtract">Returned content</label
+          ><select id="authorExtract">
+            <option value="text">Bounded text</option>
+            <option value="link">Own link + bounded descendant title</option>
+            <option value="state">Control state</option>
+          </select>
+          <label for="authorCardinality">Role cardinality</label
+          ><select id="authorCardinality">
+            <option value="one">One exact target</option>
+            <option value="many">Many bounded items</option>
+          </select>
+          <label for="authorLimit">Many-item maximum · 1–100</label
+          ><input id="authorLimit" type="number" min="1" max="100" value="50" />
+          <label for="authorKind">Append a supported procedure step</label
+          ><select id="authorKind">
+            <option value="read">Read role only</option>
+            <option value="fill">Fill native field</option>
+            <option value="scroll">Scroll element</option>
+            <option value="click">Navigate ordinary link</option>
+          </select>
+          <label for="authorProcedure">Procedure ID</label
+          ><input id="authorProcedure" value="use-target" />
+          <label for="authorParameter"
+            >Named string parameter · fill value / exact navigation URL</label
+          ><input
+            id="authorParameter"
+            placeholder="query or linkUrl; optional"
+          />
+          <label for="authorValue">Literal fill text or scroll delta</label
+          ><input id="authorValue" value="" />
+        </div>
+        <button id="applyFields">Apply fields to unsaved draft</button>
+        <p>
+          Applying appends a step to the named procedure; it does not save or
+          activate. Advanced JSON remains available below. Existing base/scope
+          conditions are preserved.
+        </p>
         <label for="editor">Definition · strict JSON</label
         ><textarea
           id="editor"
@@ -91,7 +176,18 @@
           <button id="save" class="primary">Save draft</button
           ><button id="test">Test current draft</button
           ><button id="activate">Activate tested revision</button>
+          <button id="deactivate">Deactivate active revision</button>
         </div>
+        <fieldset>
+          <legend>Explicit new-permission acknowledgement</legend>
+          <p id="permissionSummary">
+            Test or preview the draft to see additions.
+          </p>
+          <label><input id="ackRead" type="checkbox" /> read</label
+          ><label><input id="ackFill" type="checkbox" /> fill</label
+          ><label><input id="ackClick" type="checkbox" /> click</label
+          ><label><input id="ackScroll" type="checkbox" /> scroll</label>
+        </fieldset>
         <div class="actions">
           <button id="preview">Preview update</button
           ><button id="import">Import as draft</button
@@ -125,7 +221,7 @@
     </main>
     <footer>
       <p id="status" role="status" aria-live="polite">Not connected</p>
-      <span>SWU 0.1.0 · local development preview</span>
+      <span>SWU 0.2.0 · local development preview</span>
     </footer>
     <script type="module" src="popup.js"></script>
   </body>

@@ -24,12 +24,19 @@ test(
       new URL("../extension/page.js", import.meta.url),
       "utf8",
     );
+    const readingSource = await readFile(
+      new URL("../src/reading.js", import.meta.url),
+      "utf8",
+    );
     const html = `<!doctype html><meta charset="utf-8"><style>body{margin:0}article{position:absolute;left:10px;top:10px;width:250px;height:2000px}#off{position:absolute;top:1500px}#hidden{display:none}#clip{position:absolute;left:280px;top:10px;width:150px;height:24px;overflow:hidden}#below{position:absolute;top:80px}#search{position:absolute;left:450px;top:100px}</style><article id="article" aria-label="ACCESSIBILITY_ONLY">VISIBLE_WORD<span id="off">OFFSCREEN_WORD</span><span id="hidden">HIDDEN_WORD</span><span id="secret">SENSITIVE_WORD</span></article><div id="clip">CLIPPED_VISIBLE<span id="below">CLIPPED_OUT</span></div><input id="search" aria-label="Search"><input type="password" value="PASSWORD_VALUE"><pre id="result"></pre><script type="module">
   import {pageCommand} from '/page.js';
+  import {composeText} from '/reading.js';
   const assert=(v,m)=>{if(!v)throw Error(m);};
   try {
     const ctx={tabId:1,session:'test-session',deadline:Date.now()+30000};
+    const card=document.createElement('a');card.id='card';card.href='https://example.com/one';card.style='position:absolute;left:450px;top:160px';const title=document.createElement('span');title.textContent='OBSERVED_TITLE';card.append(title);document.body.append(card);
     const o=pageCommand('observe',{selectors:['#article','#search']},ctx),text=o.nodes.map(n=>n.text).join(' ');
+    const link=o.nodes.find(n=>n.locator?.selector==='#card');assert(link.text===''&&composeText(o,link).text==='OBSERVED_TITLE','bounded descendant link composition failed');
     assert(text.includes('VISIBLE_WORD'),'visible missing');
     for(const word of ['OFFSCREEN_WORD','HIDDEN_WORD','SENSITIVE_WORD','CLIPPED_OUT','PASSWORD_VALUE','ACCESSIBILITY_ONLY'])assert(!text.includes(word),'leaked '+word);
     assert(o.nodes.find(n=>n.locator?.selector==='#article').label==='ACCESSIBILITY_ONLY','metadata missing');
@@ -40,6 +47,7 @@ test(
     assert(document.getElementById('search').value==='SWU','fill missing');
     assert(pageCommand('act',{action:a,before:o,target:n},ctx).delivery==='not-sent','duplicate delivered');
     const fresh=pageCommand('observe',{selectors:[]},ctx),target=fresh.nodes.find(n=>n.locator?.selector==='#search');
+    assert(fresh.nodes.find(n=>n.locator?.selector==='#card').ref===link.ref,'same-document element ref not stable');
     document.getElementById('search').setAttribute('data-changed','yes');
     assert(pageCommand('act',{action:{...a,operationId:'stale',target:target.ref,expectedValue:'SWU'},before:fresh,target},ctx).delivery==='not-sent','mutation delivered');
     const field=document.getElementById('search');field.blur();field.addEventListener('focus',()=>{field.value='site-change';},{once:true});
@@ -52,9 +60,17 @@ test(
     const server = http.createServer((req, res) => {
       res.setHeader(
         "content-type",
-        req.url === "/page.js" ? "text/javascript" : "text/html",
+        ["/page.js", "/reading.js"].includes(req.url)
+          ? "text/javascript"
+          : "text/html",
       );
-      res.end(req.url === "/page.js" ? source : html);
+      res.end(
+        req.url === "/page.js"
+          ? source
+          : req.url === "/reading.js"
+            ? readingSource
+            : html,
+      );
     });
     server.listen(0, "127.0.0.1");
     await once(server, "listening");

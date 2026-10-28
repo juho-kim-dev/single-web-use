@@ -8,9 +8,11 @@ SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes 
 
 This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
-## Development checkpoint · 0.1.0
+## Development checkpoint · 0.2.0
 
 Implemented: authenticated extension/connector transport, bounded viewport DOM observation, guarded **synthetic** fill/link-click/element-scroll, CLI, stdio MCP, and versioned pack draft/test/activate/run/export/import with pinned personal overlays and update previews.
+
+This increment adds filtered text/link/state reading, bounded many-item roles with same-node title/link evidence, deterministic retained-observation pages, capability discovery, observation read/history/diff, explicit private saved reading after restart, ordinary author fields and deactivation. [Source-backed legacy parity and concrete gaps](docs/legacy-parity.md) distinguish these implementations from native input and render research.
 
 Locally checked on Windows with Node 24.22.1: syntax, build, contract/runtime/storage/HTTP/MCP tests, and a synthetic DOM self-check in installed headless Chrome with an isolated temporary profile. **Extension installation, foreground Chrome integration, real-site usefulness and AI-client interoperability remain unverified.** This is a reviewable development preview, not a browser-store/npm release or an all-sites claim. See [validation](docs/validation.md).
 
@@ -45,6 +47,7 @@ On an ordinary HTTP(S) page, open the extension and select **Connect current tab
 ```sh
 node src/cli.js status
 node src/cli.js observe
+node src/cli.js call read examples/read-links.json
 node src/cli.js packs
 node src/cli.js call packRun examples/run-query.json
 ```
@@ -73,13 +76,15 @@ Use your client's supported MCP configuration format. This generic example is no
 ## Make a site ability
 
 1. **Observe → Read now**; select a target to propose a read-only draft.
-2. In **Site packs**, edit strict JSON: origin/path/conditions, roles/selectors/extraction, permissions and procedures. Fill steps accept bounded named string parameters.
-3. **Save draft → Test current draft → Activate tested revision**. A test acquires a new observation and checks available locators. Future roles and procedure outcomes stay unverified. Activation is explicit.
+2. In **Site packs**, edit ordinary fields for pack/name/scope, role/selector/extraction, one/many cardinality and supported fill/scroll/link steps. **Apply fields** changes only an unsaved draft; **Save draft** persists it. Advanced JSON is available for conditions and detailed changes. Named string parameters support fill values and exact repeated-item link selection.
+3. **Save draft → Test current draft → Activate tested revision**. A test acquires a new observation and checks available locators. Future roles and procedure outcomes stay unverified. Review any new permissions and explicitly check their acknowledgement before activation. **Deactivate** turns off an exact active revision while preserving its definitions/history.
 4. Reuse through CLI/MCP or **Run an active procedure**. Initial preconditions run once; scope and the current target are checked per step; final postconditions are checked last.
-5. **Check drift**, then edit/retest. **Preview update** reports changed fields and affected overlays. Bases and personal revisions stay separate; overlays pin their base hash and cannot widen its permissions or scope.
+5. **Check drift**, then edit/retest. **Preview update** reports changed fields, new permissions and affected overlays. Bases and personal revisions stay separate. A global base may narrow to a site overlay; site/path restrictions and base conditions cannot broaden. Personal new primitive permissions require fresh test and explicit activation acknowledgement, never automatic elevation.
 6. **Export definition** to share. Only definitions are exported, but selectors/labels/static strings may still be personal. Import is an inactive draft.
 
 [Pack/API examples](docs/packs.md). Page content and pack descriptions are untrusted data, never authorization for sensitive operations.
+
+Use the Observe filter panel or `read` to choose content modes and optional active pack. Pagination reuses the exact observation, without another browser read. Save a selected page explicitly through **Save this reading page privately**; saved content reloads after runtime restart and never enters pack export. History/diff and saved refs are historical evidence, not current input authorization. See [reading, retention and preservation contracts](docs/reading.md).
 
 ## Current boundaries
 

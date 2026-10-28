@@ -50,9 +50,11 @@ export class StateStore {
       if (e.code !== "ENOENT") throw e;
     }
     if (!this.data.packs || !this.data.operations) throw Error("invalid-state");
+    this.data.contents ??= {};
     for (const key of [
       ...Object.keys(this.data.packs),
       ...Object.keys(this.data.operations),
+      ...Object.keys(this.data.contents),
     ])
       id.parse(key);
     for (const op of Object.values(this.data.operations))

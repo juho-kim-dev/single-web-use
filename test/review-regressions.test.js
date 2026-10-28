@@ -190,13 +190,13 @@ test("inherited selectors and references resolve pinned base without widening sc
   assert.ok(c.args.selectors.includes("#extra"));
   runtime.reply(session, c.id, observation({ session }));
   await result;
-  await assert.rejects(
-    runtime.packs.draft(
-      { ...overlay, id: "wider", permissions: ["read", "fill", "click"] },
-      null,
-    ),
-    /permission-widening/,
+  const wider = await runtime.packs.draft(
+    { ...overlay, id: "wider", permissions: ["read", "fill", "click"] },
+    null,
   );
+  assert.deepEqual(runtime.packs.addedPermissions("wider", wider.revision), [
+    "click",
+  ]);
   await assert.rejects(
     runtime.packs.draft(
       {

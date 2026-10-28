@@ -54,6 +54,7 @@ export function pageCommand(kind, args, context) {
       );
     globalThis[key] = state;
   }
+  state.refs ??= new WeakMap();
   const rect = (e) => {
     const r = e.getBoundingClientRect();
     return { x: r.x, y: r.y, width: r.width, height: r.height };
@@ -121,7 +122,7 @@ export function pageCommand(kind, args, context) {
     const readings = new Map(
       [...elements.keys()].map((e) => [
         e,
-        { text: "", textEvidence: textEvidence() },
+        { text: "", textSegments: [], textEvidence: textEvidence() },
       ]),
     );
     const walker = document.createTreeWalker(
@@ -199,6 +200,12 @@ export function pageCommand(kind, args, context) {
         result.textEvidence.omitted = true;
         continue;
       }
+      if (result.textSegments.length >= 64) {
+        result.textEvidence.truncated = true;
+        truncated = true;
+        continue;
+      }
+      const start = result.text.length;
       const range = document.createRange(),
         data = node.data;
       for (let i = 0; i < data.length; ) {
@@ -227,6 +234,8 @@ export function pageCommand(kind, args, context) {
         else result.textEvidence.omitted = true;
         i = next;
       }
+      const segment = result.text.slice(start).trim();
+      if (segment) result.textSegments.push({ order: visited, text: segment });
       if (examined >= budget) break;
       if (result.text && !/\s$/.test(result.text) && result.text.length < 4000)
         result.text += " ";
@@ -307,6 +316,7 @@ export function pageCommand(kind, args, context) {
         (e instanceof HTMLAnchorElement ? "link" : editable ? "textbox" : ""),
       ...label(e),
       text: "",
+      textSegments: [],
       textEvidence: textEvidence(),
       href,
       value: editable && !sensitive(e) ? e.value.slice(0, 4000) : null,
@@ -359,8 +369,12 @@ export function pageCommand(kind, args, context) {
           truncated = true;
           break;
         }
-        const ref = "n" + ++state.sequence,
-          n = sample(e, ref);
+        let ref = state.refs.get(e);
+        if (!ref) {
+          ref = "n" + ++state.sequence;
+          state.refs.set(e, ref);
+        }
+        const n = sample(e, ref);
         let parent = e.parentElement;
         while (parent && !elements.has(parent)) parent = parent.parentElement;
         n.parent = parent ? elements.get(parent) : null;
