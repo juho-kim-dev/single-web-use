@@ -28,6 +28,38 @@ export class Runtime {
     this.inFlight = new Map();
     this.children = new Map();
     this.lastPoll = 0;
+    this.paused = store.data.paused === true;
+    this.pauseEpoch = 0;
+    this.invalidated = new Set();
+    this.controlQueue = Promise.resolve();
+  }
+  setPaused(paused) {
+    if (paused) {
+      this.paused = true;
+      this.pauseEpoch++;
+      this.invalidated = new Set(this.observations.keys());
+      for (const id of this.inFlight.keys()) void this.cancel(id);
+      if (this.pending?.command.kind === "observe") {
+        this.pending.reject(Error("runtime-paused"));
+        this.pending = null;
+      }
+    }
+    const epoch = this.pauseEpoch;
+    const result = this.controlQueue.then(async () => {
+      await this.store.change((s) => {
+        s.paused = paused;
+      });
+      if (!paused && epoch === this.pauseEpoch) this.paused = false;
+      return {
+        paused: this.paused,
+        persisted: paused,
+        fenced: this.fenced,
+        meaning:
+          "no-rollback; unknown-delivery-fence-remains; fresh-observation-required",
+      };
+    });
+    this.controlQueue = result.catch(() => {});
+    return result;
   }
   bind(binding) {
     this.disconnect("browser-rebound");
@@ -63,6 +95,7 @@ export class Runtime {
     return { acknowledged: true };
   }
   async command(kind, args, timeout = this.timeout, operationId = null) {
+    if (this.paused) throw Error("runtime-paused");
     if (!this.session || !this.binding) throw Error("browser-not-bound");
     if (this.pending) throw Error("surface-busy");
     const session = this.session;
@@ -99,7 +132,7 @@ export class Runtime {
     this.queue = p.catch(() => {});
     return p;
   }
-  retain(value) {
+  retain(value, pauseEpoch = this.pauseEpoch) {
     const observation = observationSchema.parse(value);
     if (
       observation.session !== this.session ||
@@ -111,6 +144,8 @@ export class Runtime {
     if (Buffer.byteLength(JSON.stringify(observation)) > 2 * 1024 * 1024)
       throw Error("observation-byte-budget-exceeded");
     this.observations.set(observation.id, structuredClone(observation));
+    if (this.paused || pauseEpoch !== this.pauseEpoch)
+      this.invalidated.add(observation.id);
     while (
       this.observations.size > 32 ||
       [...this.observations.values()].reduce(
@@ -118,13 +153,18 @@ export class Runtime {
         0,
       ) >
         16 * 1024 * 1024
-    )
-      this.observations.delete(this.observations.keys().next().value);
+    ) {
+      const oldest = this.observations.keys().next().value;
+      this.observations.delete(oldest);
+      this.invalidated.delete(oldest);
+    }
     return structuredClone(observation);
   }
   observed(id) {
     const o = this.observations.get(id);
     if (!o || o.session !== this.session) throw Error("observation-expired");
+    if (this.invalidated.has(id))
+      throw Error("observation-invalidated-by-pause");
     return structuredClone(o);
   }
   retained(id) {
@@ -133,6 +173,7 @@ export class Runtime {
     return structuredClone(o);
   }
   async observe(extra = [], timeout = this.timeout, operationId = null) {
+    const pauseEpoch = this.pauseEpoch;
     const selectors = [
       ...new Set([
         ...extra,
@@ -155,7 +196,7 @@ export class Runtime {
       operationId,
     );
     if (result.error) throw Error(result.error);
-    return this.retain(result);
+    return this.retain(result, pauseEpoch);
   }
   read(observationId, value) {
     const options = readOptions.parse(value),
@@ -272,6 +313,7 @@ export class Runtime {
       blockedReasons: [
         ...(!connected ? ["browser-not-connected"] : []),
         ...(this.fenced ? ["surface-fenced"] : []),
+        ...(this.paused ? ["runtime-paused"] : []),
       ],
       requires: "fresh-foreground-observation-and-immediate-target-guard",
     }));
@@ -286,6 +328,8 @@ export class Runtime {
           else {
             if (o.session !== this.session)
               blockedReasons.push("observation-from-prior-binding");
+            if (this.invalidated.has(o.id))
+              blockedReasons.push("observation-invalidated-by-pause");
             if (!applicable(pack, o)) blockedReasons.push("scope-mismatch");
             if (
               checkConditions(
@@ -312,6 +356,7 @@ export class Runtime {
             );
           if (!connected) blockedReasons.push("browser-not-connected");
           if (this.fenced) blockedReasons.push("surface-fenced");
+          if (this.paused) blockedReasons.push("runtime-paused");
           procedures.push({
             packId: id,
             revision: p.active,
@@ -380,11 +425,13 @@ export class Runtime {
       if (old.digest !== digest) throw Error("operation-id-conflict");
       return structuredClone(old.receipt);
     }
+    if (this.paused) throw Error("runtime-paused");
     const before = this.observed(a.observationId),
       target = before.nodes.find((n) => n.ref === a.target);
     if (!target) throw Error("target-not-observed");
     if (this.fenced) throw Error("surface-fenced-rebind-required");
     const session = this.session;
+    const pauseEpoch = this.pauseEpoch;
     await this.reserve(a.operationId, {
       digest,
       receipt: {
@@ -403,7 +450,7 @@ export class Runtime {
           outcome: "unknown",
           reason: "cancelled-before-delivery",
         };
-      else if (session !== this.session || this.fenced)
+      else if (session !== this.session || this.fenced || this.paused)
         receipt = {
           accepted: true,
           delivery: "not-sent",
@@ -413,7 +460,8 @@ export class Runtime {
       else {
         const r = await this.command("act", { action: a, before, target });
         receipt = receiptSchema.parse(r);
-        if (receipt.after) receipt.after = this.retain(receipt.after);
+        if (receipt.after)
+          receipt.after = this.retain(receipt.after, pauseEpoch);
         if (this.cancelled.has(a.operationId))
           receipt.reason += "; cancellation-requested-after-dispatch-possible";
       }
@@ -503,6 +551,7 @@ export class Runtime {
         throw Error("operation-id-conflict");
       return structuredClone(old.receipt);
     }
+    if (this.paused) throw Error("runtime-paused");
     const p = this.packs.get(id);
     if (!p.active) throw Error("pack-not-active");
     const pack = this.packs.effective(id, p.active),
@@ -688,14 +737,16 @@ export class Runtime {
     const schema = Object.hasOwn(apiSchemas, method) && apiSchemas[method];
     if (!schema) throw Error("unknown-method");
     const a = schema.parse(args);
+    if (method === "pause") return this.setPaused(a.paused);
     if (method === "cancel") return this.cancel(a.operationId);
     if (method === "status")
       return {
-        version: "0.3.0",
+        version: "0.4.0",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,
         session: this.session,
         fenced: this.fenced,
+        paused: this.paused,
         observations: this.observations.size,
       };
     if (method === "operation")
@@ -710,6 +761,11 @@ export class Runtime {
     const operationId = ["act", "packRun"].includes(method)
       ? a.operationId
       : null;
+    const pauseEpoch = this.pauseEpoch;
+    const requestedWhilePaused = this.paused;
+    const liveRequest =
+      ["observe", "act", "packRun", "packTest"].includes(method) ||
+      (method === "read" && !a.observationId);
     if (operationId) {
       if ([...this.inFlight.values()].reduce((a, b) => a + b, 0) >= 64)
         throw Error("operation-queue-full");
@@ -717,6 +773,12 @@ export class Runtime {
     }
     try {
       return await this.serial(async () => {
+        if (
+          liveRequest &&
+          (requestedWhilePaused || pauseEpoch !== this.pauseEpoch) &&
+          !(operationId && this.store.data.operations[operationId])
+        )
+          throw Error("request-invalidated-by-pause");
         switch (method) {
           case "observe": {
             const o = await this.observe();
@@ -824,6 +886,7 @@ export class Runtime {
               draft: p.draft,
               active: p.active,
               installed: p.installed,
+              archived: !!p.archivedAt,
             }));
           case "packGet":
             return this.packs.get(a.id);
@@ -889,6 +952,12 @@ export class Runtime {
             );
           case "packDeactivate":
             return this.packs.deactivate(a.id, a.expected);
+          case "packArchive":
+            return this.packs.archive(a.id, a.expected, a.expectedActive);
+          case "packUnarchive":
+            return this.packs.unarchive(a.id, a.expected);
+          case "packRestore":
+            return this.packs.restore(a.id, a.expected, a.revision);
           case "packContext":
             return this.packs.context(this.retained(a.observationId), a);
           case "packRun":

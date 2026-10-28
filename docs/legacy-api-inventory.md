@@ -1,4 +1,4 @@
-# Nomiya API 전체 목록과 PAW 대응 — 0.3.0
+# Nomiya API 전체 목록과 PAW 대응 — 0.4.0
 
 Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록된 92개 명령과 src/main.ts의 연결 지점을 대조한 누락 점검표다. 등록·호출 지점 확인은 각 함수의 모든 동작이나 과거 실측을 검증했다는 뜻이 아니다. 상세 함수별 근거는 [계승표](legacy-parity.md), 새 구현의 실제 검사 범위는 [검증 기록](validation.md)을 따른다.
 
@@ -57,7 +57,7 @@ Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록�
 | swu/diagnostics | `pageReadStatus` | 미구현 | 제한된 스크롤·추가 읽기·진행·취소의 연결 경로. 수동 섹션 append가 이를 대신하지 않는다. |
 | swu/diagnostics | `pageDocumentPublication` | 부분 대응 | 명시 저장/읽기/문서 내보내기. 고정 파일 경로 발행·유효성 추적·자동 갱신 상태는 미구현. |
 | swu/execution | `cancel` | 부분 대응 | operation별 취소와 도착 관찰 중단, 불명 입력 재시도 금지. 전역 작업면 복구/입력 되돌리기는 미계승. |
-| swu/execution | `pause` | 미구현 | 저장된 전역 일시정지 정책. 개별 cancel/확장 disconnect와 동일하지 않다. |
+| swu/execution | `pause` | 부분 대응 | 저장되는 pause/resume, 대기 작업·입력 참조 무효화와 unknown fence 보존. 원본 모니터·네이티브 입력 해제는 미계승. |
 | swu/execution | `pageReadCancel` | 미구현 | 제한된 스크롤·추가 읽기·진행·취소의 연결 경로. 수동 섹션 append가 이를 대신하지 않는다. |
 | swu/execution | `pointerRecover` | 미구현 | 지속 포인터 상태·실제 커서 관찰·원래 수신자 release/복구·표시 설정. 네이티브 어댑터와 함께 검증해야 한다. |
 | swu/execution | `pointerConfigure` | 미구현 | 지속 포인터 상태·실제 커서 관찰·원래 수신자 release/복구·표시 설정. 네이티브 어댑터와 함께 검증해야 한다. |
@@ -81,8 +81,8 @@ Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록�
 | swu/knowledge | `recordDiscard` | 미구현 | 실행/사용자 입력의 명시 녹화와 초안 생성/폐기. 수동 절차 편집과 별개다. |
 | swu/storage | `packs` | 부분 대응 | 버전 있는 팩 목록. 원본 저장 형식은 호환되지 않는다. |
 | swu/storage | `read` | 부분 대응 | 원본 read는 팩 읽기이므로 새 packGet에 대응한다. 새 read(콘텐츠 읽기)와 이름만으로 동일시하지 않는다. |
-| swu/storage | `archive` | 미구현 | 원본 revision 기반 보관/복원. 새 deactivate는 비활성화만 하므로 대체가 아니다. |
-| swu/storage | `restore` | 미구현 | 원본 revision 기반 보관/복원. 새 deactivate는 비활성화만 하므로 대체가 아니다. |
+| swu/storage | `archive` | 부분 대응 | packArchive/Unarchive가 충돌 검사·원본 판본 보존·보관 상태를 제공한다. 파일 이동 형식이 아니며 pinned overlay의 base는 보존한다. |
+| swu/storage | `restore` | 부분 대응 | packRestore가 저장 판본을 비활성 초안으로 복구하고 새 검사/활성화를 요구한다. 원본 backup 파일/설치 형식 이전과 사이트 상태 복구는 아니다. |
 | swu/storage | `export` | 부분 대응 | 정의만의 packExport/Import와 충돌 검사. 기존 Nomiya/Izakaya 데이터 이전은 별도 미구현. |
 | swu/storage | `import` | 부분 대응 | 정의만의 packExport/Import와 충돌 검사. 기존 Nomiya/Izakaya 데이터 이전은 별도 미구현. |
 | swu/storage | `pageDocumentExports` | 부분 대응 | documentCreate/Append/List/Read/Export. 명시 저장한 호환 섹션·재시작·무결성·선택적 Markdown/메타데이터 묶음. 원본 형식/자동 합성 문서와 호환되지 않는다. |

@@ -1,9 +1,10 @@
-# Validation record · 0.3.0 increment
+# Validation record · 0.4.0 increment
 
 Environment: Windows, Node 24.22.1, locked Zod 4.6.7. Tests use temporary private state; no Nomiya installation/data or existing user browser profile is changed. No Actions runs, extension installation or real-site trial were performed. The supervisor published the reviewed0.2 checkpoint through PR2; implementation, local tests and live validation remain separate.
 
 | Check | Actual result / meaning |
 |---|---|
+| Current0.4 source | Normal concurrent66/66 tests,0 failed/0 skipped; syntax/build passed. Earlier increment results below retain their original scope. |
 | `npm run check` | JavaScript syntax checks across source, adapter, scripts and tests; not TypeScript/static semantic verification |
 | `npm test` | Current0.3 source:59 pass/0 failed/0 skipped in the normal concurrent suite. The previous0.2 repair also passed independent43/43 and two simultaneous43/43 suites. Historical local counts are not independent verification; synthetic Chrome is not live verification |
 | `npm run build` | Copies an installable unpacked manifest/module/popup tree into ignored `dist/extension`; connector runs from source |
@@ -44,3 +45,11 @@ The supervisor implemented the0.3 increment and executed its tests. A separate p
 New arrival tests cover exact source/destination contracts, same/new document, observed destination text, unexpected route, count and timeout bounds, cancellation/rebind, one input attempt and unchanged unknown-delivery fence. Document tests cover preserved sections, expected revisions, duplicate intent/conflicts, restart, context boundaries, byte/count rejection, integrity, escaped export and shared MCP routing. The actual popup module is loaded with simulated DOM/transport for race/conflict tests; this does not verify real extension visuals/accessibility.
 
 Follow-up CLI review found selection/reopen identity loss and concurrent popup storage overwrite. The common worker now serializes persisted append intent and conflict reset. The actual worker/popup regression covers simultaneous distinct/same pairs, uncertain replies, selection/content changes and worker/popup restart. The final separate CLI source review confirmed these findings resolved and reported no new concrete defect in that supplied scope; it ran no tools/tests. The supervisor's final normal suite remained59/59 with0 skips, syntax/build passed and npm audit reported0 known vulnerabilities. Real MV3 lifecycle termination remains unverified.
+
+## 0.4.0 control/lifecycle verification
+
+`control-lifecycle.test.js` covers persisted pause/bind/restart, historical reads, queued work and fast resume, unleased/leased input, interrupted reads, disk failure, resolved-reply/retain races for observe and act.after, archive conflicts, original/pinned definition preservation and fresh validation after restore. `popup-lifecycle.test.js` loads the actual module with simulated controls/transport and checks that late lifecycle/load replies preserve unsaved JSON, ordinary fields and selection. These seven tests join the normal66/66 suite; none substitutes for actual extension UI or browser termination tests.
+
+The separate primary CLI reviewed source only, identified the pause-boundary and editor-overwrite findings, and confirmed their fixes in follow-up source reviews. Supervisor check/test/build and package inspection passed. The0.4 package lists71 entries with0 private/cache files. Dependencies are unchanged from the0.3 audit with0 reported vulnerabilities; no separate new audit is implied.
+
+Graphify0.9.95 AST output in ignored `.local/graphify-040/` covers the same15 source/extension files:147 nodes,357 edges,8 communities. Source SHA-256 values match before/after, base commit plus dirty provenance are retained and the final commit is checked against them. Diagnostics report19 same-endpoint relation variants,0 missing/dangling/self-loop edges. Report/HTML generated, visual inspection not performed. No personal source or semantic LLM extraction is included.

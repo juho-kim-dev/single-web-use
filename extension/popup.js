@@ -141,6 +141,14 @@ action("saveToken", async () => {
 });
 action("bind", () => send({ type: "bind" }));
 action("disconnect", () => send({ type: "disconnect" }));
+async function showControl(paused) {
+  const result = await api("pause", { paused });
+  $("controlStatus").textContent = result.paused
+    ? "Paused · historical reading and pack management remain available"
+    : `Resumed · read fresh evidence before input${result.fenced ? " · unknown delivery still fenced; inspect before rebind" : ""}`;
+}
+action("pauseRuntime", () => showControl(true));
+action("resumeRuntime", () => showControl(false));
 action("read", async () => {
   observation = await api("observe");
   $("observation").textContent = JSON.stringify(observation, null, 2);
@@ -181,20 +189,73 @@ async function refresh() {
   $("packList").replaceChildren(new Option("Select a pack", ""));
   for (const p of packs)
     $("packList").add(
-      new Option(`${p.id}${p.active ? " · active" : ""}`, p.id),
+      new Option(
+        `${p.id}${p.archived ? " · archived" : p.active ? " · active" : ""}`,
+        p.id,
+      ),
     );
   report(packs);
 }
 action("refresh", refresh);
-action("load", async () => {
-  selected = $("packList").value;
-  const p = await api("packGet", { id: selected });
+const editorState = () =>
+  JSON.stringify([
+    selected,
+    revision,
+    $("packList").value,
+    $("editor").value,
+    fields.map((name) => $(fieldIds[name]).value),
+  ]);
+async function loadPack(before = editorState(), id = $("packList").value) {
+  const p = await api("packGet", { id });
+  if (editorState() !== before)
+    throw Error(
+      "Editor changed; server result not applied to editor. Reload explicitly.",
+    );
+  selected = id;
   revision = p.draft;
   expected = p.draft;
   activeRevision = p.active;
   remember(p.revisions[revision]);
-  report({ id: selected, revision, active: p.active, tests: p.tests });
-});
+  $("restoreRevision").replaceChildren();
+  for (const rev of Object.keys(p.revisions))
+    $("restoreRevision").add(new Option(rev, rev));
+  $("restoreRevision").value = revision;
+  if (p.archivedAt) $("revisionStatus").textContent += " · archived";
+  report({
+    id: selected,
+    revision,
+    active: p.active,
+    archived: !!p.archivedAt,
+    tests: p.tests,
+  });
+}
+action("load", loadPack);
+for (const [button, method] of [
+  ["archivePack", "packArchive"],
+  ["unarchivePack", "packUnarchive"],
+  ["restorePack", "packRestore"],
+])
+  action(button, async () => {
+    assertSaved();
+    const id = selected;
+    const before = editorState();
+    const result = await api(method, {
+      id,
+      expected: revision,
+      ...(method === "packArchive" ? { expectedActive: activeRevision } : {}),
+      ...(method === "packRestore"
+        ? { revision: $("restoreRevision").value }
+        : {}),
+    });
+    report(result);
+    if (editorState() === before) await loadPack(before, id);
+    else
+      report({
+        ...result,
+        editorPreserved: true,
+        next: "Editor changed while request ran; reload explicitly when ready.",
+      });
+  });
 action("new", async () => {
   selected = null;
   revision = null;

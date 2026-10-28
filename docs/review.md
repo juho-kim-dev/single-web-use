@@ -79,3 +79,16 @@ The separate primary CLI reviewed provided code only because its restricted Wind
 The minimum complete change reuses existing pack/schema/StateStore/connector paths, bounded pagination, conditions and Node primitives. Document sections preserve overlap instead of inventing a correspondence engine. Export reuses checksums and escaped strings rather than adding an archive dependency. Missing legacy functionality remains explicit in the92-command inventory; no numeric completion percentage is inferred.
 
 Limits: source/local tests only; installed extension, real sites, native input/paint, accessibility, client/other-OS adoption and inaccessible historical originals remain unverified. Optional export is a capability, not a new prerequisite for SWU use.
+
+## 0.4.0 Ponytail and separate CLI review
+
+Base: published deecb7e. Scope: strict pause/lifecycle APIs → runtime control/store/packs → CLI/MCP discovery and popup → seven new regression tests, contract/requirements/parity docs. Load remains one runtime and shared extension worker with concurrent clients. No new package, service, permission, installer or original-data conversion.
+
+The primary CLI reviewed supplied public source without executing tools. The supervisor implemented and ran tests. Two concrete findings were fixed and re-reviewed:
+
+1. A reply resolved immediately before pause could be retained afterward and escape input invalidation. Capture request pauseEpoch in observe/act and pass it to retain; preserve late results as historical evidence while marking input refs invalid. Both observe and act.after have exact reply-then-pause regressions. Eviction also removes obsolete invalidation entries.
+2. Archive/restore replies could overwrite edits made while awaiting a response. Capture editor selection, revision, JSON and ordinary field values; compare after lifecycle and load awaits before applying. Preserve changed editor state and display the server result separately. Actual popup-module tests cover JSON, fields and selected-pack changes.
+
+The final CLI source review confirmed those findings resolved and reported no further concrete defect in the supplied changed scope. Normal supervisor tests pass66/66 with0 skipped; check/build and package privacy inspection pass. Runtime pause reuses existing cancel/receipts and StateStore; restoration reuses preserved revisions instead of copying files or introducing another history engine. Archived bases remain available to pinned overlays, stated in UI/contracts. No safe further deletion was identified that preserves requested behavior and validation boundaries.
+
+Unverified: installed extension and actual MV3/OS process lifecycle, foreground visual/accessibility behavior, real websites, native input release and all historical-source parity. Storage failure keeps current memory paused but cannot promise restart persistence; this boundary is explicit.
