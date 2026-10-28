@@ -35,3 +35,7 @@ Many-item navigation declares a click step's `linkParameter` among its named str
 Saved entries have new immutable IDs, max64 entries, max512KiB per entry and max8MiB aggregate content. Reaching a bound fails without deleting older evidence. There is no automatic capture, overwrite, eviction, external upload or pack embedding. State-directory single-owner/non-atomic check+rename limitations remain in SECURITY.md. Locator tests now persist only validation metadata/ref IDs, not a growing automatic archive of full reading text.
 
 Saved evidence never repopulates current input refs after restart. Current observation, historical retained captures, reusable definitions and explicitly saved selected content remain distinct. Saved content can contain personal data; keep it private and outside Git. `packExport` returns only definitions.
+
+## Accumulated reading and navigation
+
+0.3 adds optional bounded `arrival` on final-click procedures and `documentCreate/Append/List/Read/Export` for explicitly saved compatible sections. See [full contracts and examples](navigation-and-documents.md). These keep delivered input, observed arrival and historical content separate. All92 original registered commands are tracked in [the API inventory](legacy-api-inventory.md).

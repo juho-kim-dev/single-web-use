@@ -43,6 +43,10 @@ State writes recheck the original disk digest after the temporary file has been 
 
 History is limited to32 captures/16MiB (2MiB each). Rebinding preserves historical reading while live session guards invalidate old inputs. Diffs require same surface/session/document/generation/URL. Explicit content pages use the existing private StateStore (64 entries/8MiB total/512KiB each), survive restart and never repopulate input refs. Ordinary observation collects active effective selectors only; packTest alone adds its draft selectors. [Reading contracts](reading.md) and [parity](legacy-parity.md) give exact scope.
 
+## Arrival and documents · 0.3.0
+
+An optional final-click arrival rule uses bounded observation through the existing serialized runtime and keeps arrival evidence separate from input delivery/fences. `ReadingDocuments` reuses StateStore for explicit same-context sections, revision-bound append, verified historical retries and escaped content export. CLI/MCP/popup share the strict API contracts. Popup retry identities persist separately in extension-local storage before append dispatch; they confer no input authority. [Contracts and limits](navigation-and-documents.md) and the [92-command legacy inventory](legacy-api-inventory.md) describe exact scope and omissions.
+
 ## External references
 
 Chrome supports document-targeted packaged functions with activeTab/scripting ([official scripting API](https://developer.chrome.com/docs/extensions/reference/api/scripting)). MCP uses newline-separated JSON-RPC on stdio ([official transport specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports)). Supported protocol versions are explicit in the connector; client interoperability requires actual testing.

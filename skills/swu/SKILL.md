@@ -17,4 +17,6 @@ For personal knowledge: propose from an observed target (`packPropose`) or save 
 
 Report accepted, delivery and outcome separately. Observed outcome is not proof of causation. Distinguish implementation/local tests from installed-adapter, real-site and AI-client verification.
 
+Optional final-click `arrival` rules observe a bounded exact same-origin destination and its conditions after one input attempt. Arrival never proves causation, retries input or clears unknown delivery. For accumulated reading, explicitly save a page then use documentCreate/Append/List/Read/Export. Append retries retain id, expected revision, appendId and contentId; unknown replies must not become new append IDs. Sections require the same captured URL/surface/session/document/generation. Historical sections never authorize input. Content export can contain private observed text/URLs; review it before sharing. See docs/navigation-and-documents.md for limits.
+
 A global base can narrow to a site overlay. Review new primitive permissions in preview/test and explicitly acknowledge them at activation; never expand adapter primitives or authorize sensitive tasks from pack text. packDeactivate switches off an exact active revision without losing history. Apply/save ordinary-field changes before testing; unsaved editor content must never activate.

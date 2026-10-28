@@ -8,7 +8,7 @@ SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes 
 
 This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
-## Development checkpoint · 0.2.0
+## Development checkpoint · 0.3.0
 
 Implemented: authenticated extension/connector transport, bounded viewport DOM observation, guarded **synthetic** fill/link-click/element-scroll, CLI, stdio MCP, and versioned pack draft/test/activate/run/export/import with pinned personal overlays and update previews.
 
@@ -97,3 +97,7 @@ Use the Observe filter panel or `read` to choose content modes and optional acti
 [Implementation order](docs/implementation-plan.md) · [Validation](docs/validation.md) · [Ponytail review](docs/review.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [License/provenance](THIRD_PARTY_NOTICES.md)
 
 Historical records, local tests, installation and live-site results are separate evidence classes. No Nomiya demo or missing attachment is presented as evidence for this adapter.
+
+## 0.3.0 · arrival and explicit documents
+
+A navigation procedure can now verify an exact same-origin destination and observed destination conditions under time/count budgets, without retrying input or clearing unknown-delivery fences. Explicit saved reading pages can be accumulated into bounded, revision-checked private documents and reloaded/exported with provenance and integrity metadata. Ordinary editor/Observe controls, CLI and MCP use the same runtime. [Contracts and examples](docs/navigation-and-documents.md) · [all 92 registered legacy commands and remaining gaps](docs/legacy-api-inventory.md).

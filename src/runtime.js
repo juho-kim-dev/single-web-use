@@ -9,11 +9,14 @@ import {
 import { hash } from "./storage.js";
 import { Packs, checkConditions, applicable, resolveRoles } from "./packs.js";
 import { inside, itemFor, paginate, diffObservations } from "./reading.js";
+import { ReadingDocuments } from "./documents.js";
+import { navigationDestination, observeArrival } from "./arrival.js";
 
 export class Runtime {
   constructor(store, timeout = 10000) {
     this.store = store;
     this.packs = new Packs(store);
+    this.documents = new ReadingDocuments(store);
     this.timeout = timeout;
     this.session = null;
     this.binding = null;
@@ -59,7 +62,7 @@ export class Runtime {
     this.pending = null;
     return { acknowledged: true };
   }
-  async command(kind, args) {
+  async command(kind, args, timeout = this.timeout, operationId = null) {
     if (!this.session || !this.binding) throw Error("browser-not-bound");
     if (this.pending) throw Error("surface-busy");
     const session = this.session;
@@ -67,16 +70,17 @@ export class Runtime {
       const timer = setTimeout(() => {
         if (this.pending?.command.id === command.id) this.pending = null;
         reject(Error("bridge-timeout-no-retry"));
-      }, this.timeout);
+      }, timeout);
       const command = {
         id: randomUUID(),
         session,
         kind,
         args,
         binding: this.binding,
-        deadline: Date.now() + this.timeout,
+        deadline: Date.now() + timeout,
       };
       this.pending = {
+        operationId,
         command,
         leased: false,
         resolve: (r) => {
@@ -128,7 +132,7 @@ export class Runtime {
     if (!o) throw Error("observation-not-retained");
     return structuredClone(o);
   }
-  async observe(extra = []) {
+  async observe(extra = [], timeout = this.timeout, operationId = null) {
     const selectors = [
       ...new Set([
         ...extra,
@@ -144,7 +148,12 @@ export class Runtime {
       ]),
     ];
     if (selectors.length > 256) throw Error("active-selector-budget-exceeded");
-    const result = await this.command("observe", { selectors });
+    const result = await this.command(
+      "observe",
+      { selectors },
+      timeout,
+      operationId,
+    );
     if (result.error) throw Error(result.error);
     return this.retain(result);
   }
@@ -319,6 +328,12 @@ export class Runtime {
               additionalProperties: false,
             },
             blockedReasons,
+            ...(proc.arrival
+              ? {
+                  arrival: proc.arrival,
+                  arrivalDestination: "exact-selected-same-origin-href",
+                }
+              : {}),
             applicability: o ? "checked-at-retained-observation" : "unexamined",
             currentAtRead: "not-checked",
           });
@@ -332,6 +347,9 @@ export class Runtime {
       "observationDiff",
       "contentRead",
       "contentList",
+      "documentRead",
+      "documentList",
+      "documentExport",
       "capabilities",
     ];
     const act = ["act", "packRun", "cancel", "operation"];
@@ -385,6 +403,13 @@ export class Runtime {
           outcome: "unknown",
           reason: "cancelled-before-delivery",
         };
+      else if (session !== this.session || this.fenced)
+        receipt = {
+          accepted: true,
+          delivery: "not-sent",
+          outcome: "unknown",
+          reason: "binding-or-fence-changed-before-delivery",
+        };
       else {
         const r = await this.command("act", { action: a, before, target });
         receipt = receiptSchema.parse(r);
@@ -423,6 +448,13 @@ export class Runtime {
           "not-running; inspect durable receipt; never retry unknown delivery",
       };
     this.cancelled.add(operationId);
+    if (
+      this.pending?.operationId === operationId &&
+      this.pending.command.kind === "observe"
+    ) {
+      this.pending.reject(Error("arrival-cancelled"));
+      this.pending = null;
+    }
     const child = this.children.get(operationId);
     if (child) this.cancelled.add(child);
     if (
@@ -498,6 +530,8 @@ export class Runtime {
       },
     });
     const steps = [];
+    let navigation = null,
+      arrival = null;
     let outcome = "unknown",
       reason = "procedure-stopped";
     try {
@@ -545,6 +579,11 @@ export class Runtime {
         }
         const node = candidates[0],
           child = hash([operationId, digest, i]).slice(0, 64);
+        if (proc.arrival && i === proc.steps.length - 1)
+          navigation = {
+            source: o,
+            destination: navigationDestination(o, node.href),
+          };
         this.children.set(operationId, child);
         let result;
         try {
@@ -590,6 +629,24 @@ export class Runtime {
         reason = "steps-dispatched";
       }
       if (
+        navigation &&
+        steps.length === proc.steps.length &&
+        steps.at(-1).delivery !== "not-sent"
+      ) {
+        arrival = await observeArrival(this, {
+          ...navigation,
+          pack,
+          rule: proc.arrival,
+          operationId,
+        });
+        reason = arrival.reason;
+        if (
+          arrival.status === "arrived" &&
+          steps.every((s) => s.delivery === "synthetic-dispatched")
+        )
+          outcome = "observed";
+      }
+      if (
         !this.cancelled.has(operationId) &&
         session === this.session &&
         steps.length === proc.steps.length &&
@@ -620,6 +677,7 @@ export class Runtime {
       outcome,
       reason,
       steps,
+      ...(arrival ? { arrival } : {}),
     };
     await this.store.change((s) => {
       s.operations[operationId].receipt = receipt;
@@ -633,7 +691,7 @@ export class Runtime {
     if (method === "cancel") return this.cancel(a.operationId);
     if (method === "status")
       return {
-        version: "0.2.0",
+        version: "0.3.0",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,
         session: this.session,
@@ -748,6 +806,16 @@ export class Runtime {
               inputPermission: false,
             };
           }
+          case "documentCreate":
+            return this.documents.create(a);
+          case "documentAppend":
+            return this.documents.append(a);
+          case "documentList":
+            return this.documents.list();
+          case "documentRead":
+            return this.documents.read(a.id);
+          case "documentExport":
+            return this.documents.export(a.id);
           case "act":
             return this.act(a);
           case "packs":

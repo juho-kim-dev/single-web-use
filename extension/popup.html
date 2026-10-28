@@ -81,6 +81,24 @@
         ><input id="savedId" /><button id="savedRead">
           Reload saved content
         </button>
+        <h2>Accumulated reading documents</h2>
+        <p>
+          Combine explicitly saved sections from the same page and document.
+          Overlap stays visible; this is not a complete page capture.
+        </p>
+        <label for="documentName">Document name</label
+        ><input id="documentName" value="My reading" />
+        <button id="documentCreate">Create from saved reading</button>
+        <label for="documentSelect">Private documents</label
+        ><select id="documentSelect">
+          <option value="">Select a document</option>
+        </select>
+        <div class="actions">
+          <button id="documentList">Refresh documents</button
+          ><button id="documentRead">Read selected document</button
+          ><button id="documentAppend">Append saved reading</button
+          ><button id="documentExport">Export selected document bundle</button>
+        </div>
         <div class="actions">
           <button id="history">Observation history</button
           ><button id="diff">Compare latest compatible observations</button>
@@ -152,6 +170,32 @@
           />
           <label for="authorValue">Literal fill text or scroll delta</label
           ><input id="authorValue" value="" />
+          <label for="authorArrivalRole"
+            >Destination role · optional arrival check</label
+          ><input id="authorArrivalRole" value="arrival" />
+          <label for="authorArrivalSelector"
+            >Destination selector · blank keeps existing rule</label
+          ><input id="authorArrivalSelector" />
+          <label for="authorArrivalText"
+            >Exact observed destination text · optional</label
+          ><input id="authorArrivalText" />
+          <label for="authorArrivalCount"
+            >Maximum arrival observations · 1–8</label
+          ><input
+            id="authorArrivalCount"
+            type="number"
+            min="1"
+            max="8"
+            value="4"
+          />
+          <label for="authorArrivalMs">Arrival time budget · milliseconds</label
+          ><input
+            id="authorArrivalMs"
+            type="number"
+            min="100"
+            max="10000"
+            value="5000"
+          />
         </div>
         <button id="applyFields">Apply fields to unsaved draft</button>
         <p>

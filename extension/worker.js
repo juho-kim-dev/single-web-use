@@ -108,6 +108,50 @@ async function execute(command) {
   }
 }
 const documents = new Map();
+let documentQueue = Promise.resolve();
+async function documentRequest(message) {
+  const { documentAppendRequests = {} } = await chrome.storage.local.get(
+    "documentAppendRequests",
+  );
+  const persist = () => chrome.storage.local.set({ documentAppendRequests });
+  if (message.type === "documentReload") {
+    const result = await request("/api", {
+      method: "documentRead",
+      args: { id: message.args.id },
+    });
+    for (const [key, entry] of Object.entries(documentAppendRequests))
+      if (entry.conflict && entry.request.id === result.id)
+        delete documentAppendRequests[key];
+    await persist();
+    return result;
+  }
+  const { id, contentId, expected } = message.args;
+  const key = JSON.stringify([id, contentId]);
+  if (!Object.hasOwn(documentAppendRequests, key)) {
+    if (Object.keys(documentAppendRequests).length >= 1024)
+      throw Error(
+        "Document append retry storage full; use the explicit CLI API",
+      );
+    documentAppendRequests[key] = {
+      request: { id, contentId, expected, appendId: crypto.randomUUID() },
+      conflict: false,
+    };
+  }
+  // One worker serializes all popup intents and persists them before any possible delivery.
+  await persist();
+  try {
+    return await request("/api", {
+      method: "documentAppend",
+      args: documentAppendRequests[key].request,
+    });
+  } catch (e) {
+    if (e.message === "reading-document-revision-conflict") {
+      documentAppendRequests[key].conflict = true;
+      await persist();
+    }
+    throw e;
+  }
+}
 const invalidate = () => {
   epoch++;
   documents.clear();
@@ -166,6 +210,14 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   )
     return;
   (async () => {
+    if (
+      message.type === "documentAppend" ||
+      message.type === "documentReload"
+    ) {
+      const result = documentQueue.then(() => documentRequest(message));
+      documentQueue = result.catch(() => {});
+      return result;
+    }
     if (message.type === "bind") {
       if (running) throw Error("disconnect-before-rebind");
       const [tab] = await chrome.tabs.query({

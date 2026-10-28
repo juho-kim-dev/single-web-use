@@ -23,6 +23,11 @@ const fields = [
   "procedure",
   "parameter",
   "value",
+  "arrivalRole",
+  "arrivalSelector",
+  "arrivalText",
+  "arrivalCount",
+  "arrivalMs",
 ];
 const fieldIds = {
   id: "authorId",
@@ -39,6 +44,11 @@ const fieldIds = {
   procedure: "authorProcedure",
   parameter: "authorParameter",
   value: "authorValue",
+  arrivalRole: "authorArrivalRole",
+  arrivalSelector: "authorArrivalSelector",
+  arrivalText: "authorArrivalText",
+  arrivalCount: "authorArrivalCount",
+  arrivalMs: "authorArrivalMs",
 };
 for (const name of fields)
   $(fieldIds[name]).addEventListener("input", () => {
@@ -61,6 +71,11 @@ function populate(pack) {
     procedure: "use-target",
     parameter: "",
     value: "",
+    arrivalRole: "arrival",
+    arrivalSelector: "",
+    arrivalText: "",
+    arrivalCount: 4,
+    arrivalMs: 5000,
   };
   for (const name of fields) $(fieldIds[name]).value = values[name];
   formDirty = false;
@@ -386,4 +401,98 @@ action("diff", async () => {
       after: observations.at(-1).id,
     }),
   );
+});
+let selectedDocument = null,
+  documentSelectionGeneration = 0;
+async function refreshDocuments(
+  selectId = $("documentSelect").value,
+  generation = documentSelectionGeneration,
+) {
+  const docs = await api("documentList");
+  if (generation !== documentSelectionGeneration) return docs;
+  $("documentSelect").replaceChildren(new Option("Select a document", ""));
+  for (const d of docs) $("documentSelect").add(new Option(d.name, d.id));
+  $("documentSelect").value = selectId;
+  return docs;
+}
+$("documentSelect").addEventListener("change", () => {
+  documentSelectionGeneration++;
+  selectedDocument = null;
+});
+action("documentList", async () => showReading(await refreshDocuments()));
+action("documentCreate", async () => {
+  const generation = documentSelectionGeneration;
+  const created = await api("documentCreate", {
+    id: crypto.randomUUID(),
+    name: $("documentName").value,
+    contentId: $("savedId").value,
+  });
+  if (generation === documentSelectionGeneration) {
+    selectedDocument = created;
+    await refreshDocuments(created.id, generation);
+  }
+  showReading(created);
+});
+async function loadDocument(
+  id = $("documentSelect").value,
+  generation = documentSelectionGeneration,
+  reload = false,
+) {
+  const result = reload
+    ? await send({ type: "documentReload", args: { id } })
+    : await api("documentRead", { id });
+  if (
+    generation !== documentSelectionGeneration ||
+    $("documentSelect").value !== id
+  )
+    throw Error("Document selection changed; result not applied");
+  selectedDocument = { id: result.id, revision: result.revision };
+  return result;
+}
+action("documentRead", async () => {
+  const doc = await loadDocument(
+    $("documentSelect").value,
+    documentSelectionGeneration,
+    true,
+  );
+  showReading(doc);
+});
+action("documentAppend", async () => {
+  const id = $("documentSelect").value,
+    contentId = $("savedId").value,
+    generation = documentSelectionGeneration;
+  const doc =
+    selectedDocument?.id === id
+      ? { ...selectedDocument }
+      : await loadDocument(id, generation);
+  if (
+    generation !== documentSelectionGeneration ||
+    $("documentSelect").value !== id
+  )
+    throw Error("Document selection changed; nothing appended");
+  const result = await send({
+    type: "documentAppend",
+    args: { id, expected: doc.revision, contentId },
+  });
+  if (
+    generation === documentSelectionGeneration &&
+    $("documentSelect").value === id
+  )
+    selectedDocument = null;
+  showReading(result);
+});
+action("documentExport", async () => {
+  const bundle = await api("documentExport", { id: $("documentSelect").value });
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `swu-document-${bundle.manifest.documentId}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showReading({
+    exported:
+      "historical reading content and integrity manifest; review private content before sharing",
+  });
 });

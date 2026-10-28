@@ -1,6 +1,6 @@
 {
   "name": "@juho-kim-dev/single-web-use",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Guarded viewport observation and reusable site abilities for your open browser",
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "swu": "src/cli.js"
   },
   "files": [
-    "src",
+    "src/*.js",
     "extension",
     "scripts",
     "test",
