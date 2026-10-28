@@ -75,6 +75,14 @@ export const packSchema = z
             parameters: z.array(id).max(16).default([]),
             preconditions: z.array(condition).max(8),
             postconditions: z.array(condition).max(8),
+            arrival: z
+              .object({
+                conditions: z.array(condition).min(1).max(8),
+                maxObservations: z.number().int().min(1).max(8),
+                maxElapsedMs: z.number().int().min(100).max(10000),
+              })
+              .strict()
+              .optional(),
             steps: z
               .array(
                 z
@@ -112,7 +120,11 @@ export const packSchema = z
       });
     const conditions = [
       ...p.scope.conditions,
-      ...p.procedures.flatMap((s) => [...s.preconditions, ...s.postconditions]),
+      ...p.procedures.flatMap((s) => [
+        ...s.preconditions,
+        ...s.postconditions,
+        ...(s.arrival?.conditions ?? []),
+      ]),
     ];
     if (
       conditions.some(
@@ -122,6 +134,18 @@ export const packSchema = z
       )
     )
       ctx.addIssue({ code: "custom", message: "invalid-condition" });
+    if (
+      p.procedures.some(
+        (s) =>
+          s.arrival &&
+          (s.steps.at(-1)?.kind !== "click" || s.postconditions.length),
+      )
+    )
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "arrival-requires-final-link-click-and-separate-destination-conditions",
+      });
     if (
       p.procedures.some((s) =>
         s.steps.some(
@@ -285,6 +309,15 @@ export const apiSchemas = {
     .strict(),
   contentList: z.object({}).strict(),
   contentRead: z.object({ id }).strict(),
+  documentCreate: z
+    .object({ id, name: z.string().min(1).max(200), contentId: id })
+    .strict(),
+  documentAppend: z
+    .object({ id, expected: revision, appendId: id, contentId: id })
+    .strict(),
+  documentList: z.object({}).strict(),
+  documentRead: z.object({ id }).strict(),
+  documentExport: z.object({ id }).strict(),
   act: actionSchema,
   operation: z.object({ operationId: id }).strict(),
   cancel: z.object({ operationId: id }).strict(),

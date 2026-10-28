@@ -1,0 +1,18 @@
+{
+  "format": "paw-swu-pack",
+  "schemaVersion": 1,
+  "id": "demo-arrival",
+  "version": "0.3.0",
+  "name": "Local demo reading navigation",
+  "scope": { "origin": "http://127.0.0.1:47832", "pathPrefix": "/", "conditions": [] },
+  "roles": [
+    { "id": "link", "locator": { "selector": "a[href='/reading']" }, "extract": "link" },
+    { "id": "destination", "locator": { "selector": "h1" }, "extract": "text" }
+  ],
+  "permissions": ["read", "click"],
+  "procedures": [{
+    "id": "open-reading", "parameters": [], "preconditions": [], "postconditions": [],
+    "steps": [{ "kind": "click", "role": "link" }],
+    "arrival": { "conditions": [{ "role": "destination", "state": "text", "equals": "Local navigation outcome" }], "maxObservations": 4, "maxElapsedMs": 5000 }
+  }]
+}

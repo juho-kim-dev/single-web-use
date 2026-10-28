@@ -8,7 +8,7 @@ SWU는 **PAW(Personal AI Workspace)**의 브라우저 사용 구성요소입니�
 
 기존 SWU의 계약을 이어가는 별도 PAW 구현입니다. Nomiya를 교체하거나 Obsidian 볼트에 설치하지 않으며 저장 형식도 별개입니다. [Juho Kim](https://github.com/juho-kim-dev)이 AI의 도움을 받아 개발합니다.
 
-## 0.2.0 개발 검토 지점
+## 0.3.0 개발 검토 지점
 
 확장–Connector 인증 통신, 제한된 DOM 뷰포트 관찰, 합성 필드 입력·일반 링크 클릭·요소 스크롤, CLI·stdio MCP, 팩 초안/시험/활성화/실행/내보내기/가져오기와 고정 기반 오버레이·갱신 미리보기를 구현했습니다.
 
@@ -58,3 +58,7 @@ JSON 편집기에서 사이트/전역·경로·조건 범위, 역할과 선택�
 - 저장은 단일 런타임 소유입니다. 교체 직전 digest 재검사도 원자적 CAS는 아닙니다. 외부 편집을 지원하지 않으며 조작 원장은 10,000건 한도이고 자동 삭제하지 않습니다. 원격 게이트웨이는 없습니다.
 
 [요구/미완 범위](docs/requirements.md) · [검증](docs/validation.md) · [개발 순서](docs/implementation-plan.md) · [기여](CONTRIBUTING.md) · [보안](SECURITY.md) · [라이선스·출처](THIRD_PARTY_NOTICES.md)
+
+## 0.3.0 · 도착 확인과 명시적 누적 문서
+
+링크 입력은 한 번만 시도하고, 정확한 같은 출처 목적지와 관찰된 도착 조건을 시간·횟수 제한 안에서 확인합니다. 전달 불명 상태를 성공으로 바꾸거나 입력을 재시도하지 않습니다. 명시 저장한 읽기들은 판본·문맥·용량을 검사하는 비공개 문서로 누적하고, 재시작 후 읽거나 출처·무결성 정보를 함께 내보낼 수 있습니다. 일반 편집/관찰 UI와 CLI/MCP가 같은 런타임을 사용합니다. [계약과 사용 예](docs/navigation-and-documents.md) · [원본 API 92개 전체 대응과 미구현 목록](docs/legacy-api-inventory.md).

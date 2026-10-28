@@ -55,6 +55,7 @@ export class StateStore {
       ...Object.keys(this.data.packs),
       ...Object.keys(this.data.operations),
       ...Object.keys(this.data.contents),
+      ...Object.keys(this.data.documents ?? {}),
     ])
       id.parse(key);
     for (const op of Object.values(this.data.operations))

@@ -3,6 +3,35 @@ import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
 import { StateStore } from "../src/storage.js";
 import { observation, fixture, pending, action, waitFor } from "./helpers.js";
+test("rebind during durable reservation never dispatches the old target on the new binding", async (t) => {
+  const { runtime, session, store } = await fixture(t),
+    o = runtime.retain(observation({ session }));
+  let reserved,
+    release,
+    commands = 0;
+  const entered = new Promise((r) => (reserved = r)),
+    gate = new Promise((r) => (release = r)),
+    reserve = runtime.reserve.bind(runtime),
+    command = runtime.command.bind(runtime);
+  runtime.reserve = async (...args) => {
+    await reserve(...args);
+    reserved();
+    await gate;
+  };
+  runtime.command = (...args) => {
+    commands++;
+    return command(...args);
+  };
+  const result = runtime.call("act", action(o));
+  await entered;
+  runtime.bind({ tabId: 2, windowId: 2 });
+  release();
+  const receipt = await result;
+  assert.equal(receipt.delivery, "not-sent");
+  assert.equal(commands, 0);
+  assert.equal(runtime.pending, null);
+  assert.deepEqual(store.data.operations["operation-1"].receipt, receipt);
+});
 test("immutable observations, lease once, durable duplicate receipt and conflicting operation rejection", async (t) => {
   const { runtime, store, session, root } = await fixture(t);
   const o = runtime.retain(observation({ session }));

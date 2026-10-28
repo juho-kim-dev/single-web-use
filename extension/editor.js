@@ -74,6 +74,40 @@ export function editDefinition(current, fields) {
         ...new Set([...previous.parameters, ...parameters]),
       ];
     pack.permissions = [...new Set([...pack.permissions, fields.kind])];
+    if (fields.arrivalSelector?.trim()) {
+      if (fields.kind !== "click")
+        throw Error("Arrival checks require a final navigation step");
+      const active = previous ?? procedure;
+      if (active.postconditions.length)
+        throw Error("Move destination conditions into arrival before editing");
+      if (fields.arrivalRole === fields.role)
+        throw Error("Use a separate destination role");
+      const destination = {
+        id: fields.arrivalRole,
+        locator: { selector: fields.arrivalSelector.trim() },
+        extract: "text",
+      };
+      const found = pack.roles.findIndex((r) => r.id === destination.id);
+      if (found < 0) pack.roles.push(destination);
+      else if (
+        JSON.stringify(pack.roles[found].locator) !==
+        JSON.stringify(destination.locator)
+      )
+        throw Error("Destination role already has another locator");
+      active.arrival = {
+        conditions: [
+          fields.arrivalText
+            ? {
+                role: destination.id,
+                state: "text",
+                equals: fields.arrivalText,
+              }
+            : { role: destination.id, state: "visible" },
+        ],
+        maxObservations: Number(fields.arrivalCount),
+        maxElapsedMs: Number(fields.arrivalMs),
+      };
+    }
   }
   return pack;
 }

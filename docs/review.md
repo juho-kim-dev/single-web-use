@@ -60,3 +60,22 @@ Connected boundary repairs reviewed across read/assess/packTest/context/conditio
 - Popup overlay creation uses the tested editor helper with empty overlay-owned conditions; all8 base predicates survive composition exactly once. Originals, permission acknowledgement and global→site restrictions remain intact.
 
 Verdict: hand off the repaired local commit for exact independent revalidation. This does not mark the overall SWU request, browser installation, live sites or missing legacy families complete. No new service, production timeout policy, permission expansion, arbitrary eval or ancestor innerText path was added.
+
+## 0.3.0 Ponytail and separate CLI review
+
+Base: published0ace8e7. Connected scope: optional pack arrival contract → Runtime/arrival → existing worker observation/durable receipt paths; StateStore/ReadingDocuments → strict APIs/CLI/MCP → ordinary editor and document controls; examples, tests, docs and92-command inventory. One owned local runtime remains the load model. No new dependency, service, browser permission, scheduler or original-vault write was added.
+
+The separate primary CLI reviewed provided code only because its restricted Windows command helper could not start. The supervisor implemented the code, ran the normal test suite and fixed all findings; CLI source review and supervisor execution are distinct evidence.
+
+1. Session could change while the input reservation was persisted. Recheck session/fence immediately before command creation; a stalled-reservation/rebind test proves zero commands to the new binding and a durable not-sent receipt.
+2. Append retry did not bind expected revision, and stored receipts escaped integrity coverage. Bind original expected and reconstruct the historical summary from hash-covered section prefixes; remove duplicate stored receipts. Changed intent and corruption regressions preserve existing content.
+3. Late UI loads could target a different selected document. Capture ID/content/generation before awaits and reject obsolete results. Actual popup-handler tests simulate reversed responses and selection changes.
+4. Observations received at a deadline/interruption boundary disappeared from arrival evidence. Record their source identifiers first, then mark exclusion without treating them as arrival or input authority.
+5. Definite append conflicts kept a stale request forever. An explicit successful reload may reset only a definitely rejected request. Unknown replies preserve their original identity/expected; both paths are tested.
+6. Switching documents/content or reopening the popup discarded uncertain append intent. Persist each document/content request before dispatch in extension-local storage; selection changes never clear it. Explicit reload clears only definite conflicts with no pending send. Regression covers selection/content changes and popup reopen. The bounded retry table refuses overflow instead of silently evicting identities.
+7. Separate popup copies could overwrite another window's persisted request table. Move intent creation/persistence/send and definite-conflict reload into one serialized extension-worker path. Actual worker + popup regression covers concurrent different/same pairs, selection/content changes and worker/popup restart without identity loss. The popup no longer owns a duplicate retry store.
+8. Package dry-run included Graphify's generated source-tree cache despite a root ignore file. Restrict the source package allowlist to runtime JavaScript and ignore generated graph directories in Git. The repeated package inspection contains no analysis cache or private `.local` data; no cache was published.
+
+The minimum complete change reuses existing pack/schema/StateStore/connector paths, bounded pagination, conditions and Node primitives. Document sections preserve overlap instead of inventing a correspondence engine. Export reuses checksums and escaped strings rather than adding an archive dependency. Missing legacy functionality remains explicit in the92-command inventory; no numeric completion percentage is inferred.
+
+Limits: source/local tests only; installed extension, real sites, native input/paint, accessibility, client/other-OS adoption and inaccessible historical originals remain unverified. Optional export is a capability, not a new prerequisite for SWU use.
