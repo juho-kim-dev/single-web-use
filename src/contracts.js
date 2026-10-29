@@ -203,6 +203,19 @@ export const nodeSchema = z
     locator: locator.nullable(),
     matches: z.array(z.string().max(500)).max(256),
     parent: id.nullable(),
+    scroll: z
+      .object({
+        x: z.number().finite(),
+        y: z.number().finite(),
+        width: z.number().finite().nonnegative(),
+        height: z.number().finite().nonnegative(),
+        clientWidth: z.number().finite().nonnegative(),
+        clientHeight: z.number().finite().nonnegative(),
+        basis: z.literal("observed-element-DOM-metrics-not-visible-content"),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     states: z.record(id, text),
   })
   .strict();
@@ -358,6 +371,28 @@ export const apiSchemas = {
       offset: z.number().int().min(0).max(4096).default(0),
       limit: z.number().int().min(1).max(16).default(4),
       maxBytes: z.number().int().min(1024).max(524288).default(65536),
+    })
+    .strict(),
+  pageRead: z
+    .object({
+      operationId: id,
+      packId: id,
+      packRevision: revision,
+      effectiveRevision: revision,
+      scrollRole: id,
+      read: z
+        .object({
+          roles: z.array(id).min(1).max(16),
+          kinds: z
+            .array(z.enum(["text", "link", "state"]))
+            .min(1)
+            .max(3),
+        })
+        .strict(),
+      maxSteps: z.number().int().min(0).max(8),
+      maxElapsedMs: z.number().int().min(100).max(30000),
+      maxContentBytes: z.number().int().min(1024).max(131072),
+      dy: z.number().int().min(1).max(1000),
     })
     .strict(),
   packRun: z

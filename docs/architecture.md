@@ -54,3 +54,8 @@ Global pause has an immediate in-memory gate plus a serialized persisted setting
 ## External references
 
 Chrome supports document-targeted packaged functions with activeTab/scripting ([official scripting API](https://developer.chrome.com/docs/extensions/reference/api/scripting)). MCP uses newline-separated JSON-RPC on stdio ([official transport specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports)). Supported protocol versions are explicit in the connector; client interoperability requires actual testing.
+
+
+## Bounded container reading · 0.5.0
+
+`page-reading.js` orchestrates the existing serialized Runtime observation/read/act paths with pinned effective definitions and a parent durable journal entry. `operation` reads bounded ephemeral progress outside the work queue; final receipts store routes/metrics, not raw content. Child scroll IDs derive from parent request digest/step, so cancel/pause targets the same in-flight family. An internal act guard rechecks deadline/pause epoch after reservation. Collector scroll samples are optional DOM geometry metadata, not reading content or native routing proof. See [the full contract](page-reading.md).

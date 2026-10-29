@@ -327,6 +327,19 @@ export function pageCommand(kind, args, context) {
       locator: locator(e),
       matches,
       parent: null,
+      scroll:
+        e.scrollHeight > e.clientHeight &&
+        /auto|scroll/.test(getComputedStyle(e).overflowY)
+          ? {
+              x: e.scrollLeft,
+              y: e.scrollTop,
+              width: e.scrollWidth,
+              height: e.scrollHeight,
+              clientWidth: e.clientWidth,
+              clientHeight: e.clientHeight,
+              basis: "observed-element-DOM-metrics-not-visible-content",
+            }
+          : null,
       states,
     };
   };
@@ -463,6 +476,7 @@ export function pageCommand(kind, args, context) {
       "editable",
       "rect",
       "states",
+      ...(target.scroll !== undefined ? ["scroll"] : []),
     ].some((k) => JSON.stringify(now[k]) !== JSON.stringify(target[k])) ||
     now.exposure !== "hit-tested" ||
     now.disabled

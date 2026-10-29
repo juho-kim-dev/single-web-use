@@ -8,7 +8,9 @@ SWU는 **PAW(Personal AI Workspace)**의 브라우저 사용 구성요소입니�
 
 기존 SWU의 계약을 이어가는 별도 PAW 구현입니다. Nomiya를 교체하거나 Obsidian 볼트에 설치하지 않으며 저장 형식도 별개입니다. [Juho Kim](https://github.com/juho-kim-dev)이 AI의 도움을 받아 개발합니다.
 
-## 0.4.0 개발 검토 지점
+## 0.5.0 개발 검토 지점
+
+팩 판본을 고정한 `pageRead`가 현재 컨테이너의 필터 읽기와 제한된 합성 요소 스크롤을 연결합니다. 진행 영수증·취소·시간/횟수/내용 예산을 제공하며 자동 저장이나 완독은 주장하지 않습니다. [읽기 계약](docs/page-reading.md).
 
 저장되는 전역 일시정지·재개, 대기 작업·과거 입력 근거 무효화, 팩 보관·보관 해제·과거 판본 복원을 추가했습니다. 복원은 비활성 초안으로 돌아가며 새 검사·활성화가 필요합니다. [제어·보관 계약](docs/control-and-lifecycle.md).
 
@@ -64,3 +66,10 @@ JSON 편집기에서 사이트/전역·경로·조건 범위, 역할과 선택�
 ## 0.3.0 · 도착 확인과 명시적 누적 문서
 
 링크 입력은 한 번만 시도하고, 정확한 같은 출처 목적지와 관찰된 도착 조건을 시간·횟수 제한 안에서 확인합니다. 전달 불명 상태를 성공으로 바꾸거나 입력을 재시도하지 않습니다. 명시 저장한 읽기들은 판본·문맥·용량을 검사하는 비공개 문서로 누적하고, 재시작 후 읽거나 출처·무결성 정보를 함께 내보낼 수 있습니다. 일반 편집/관찰 UI와 CLI/MCP가 같은 런타임을 사용합니다. [계약과 사용 예](docs/navigation-and-documents.md) · [원본 API 92개 전체 대응과 미구현 목록](docs/legacy-api-inventory.md).
+
+
+## Bounded container reading · 0.5.0 / 제한된 컨테이너 읽기
+
+`pageRead` connects a pinned active site pack, filtered current-container reading and guarded synthetic element scroll. Observe → Bounded container reading exposes ordinary role/mode/budget controls, progress receipts and cancellation. Use `packGet.activeEffectiveRevision` with the active revision; `operation` and `cancel` retain the same operation ID. [Contract, CLI/MCP setup and source comparison](docs/page-reading.md), [synthetic pack](examples/container-pack.json), [request template](examples/page-read.json). The example pins the unchanged synthetic fixture; edited definitions need both actual hashes from packGet.
+
+현재 위치에서 제한된 횟수만 읽고 이동하며, 캡처별 출처·범위·offset 변화와 읽기 경로를 보존합니다. 전체 완독·네이티브 휠·자동 저장은 주장하지 않습니다. 원문은 기존 보관 관측에서 읽고 필요할 때만 명시 저장합니다. 감독자가 소스 해시를 대조한 별도 작업본에서 일반 동시 실행 검사81/81·구문·빌드 통과를 확인했습니다. CLI의 MXC 환경에서는 loopback EACCES와 Chrome 시작 실패가 별도로 기록돼 있습니다. 버전0.5.0은 확장 설치·실사이트 통과나 릴리스를 뜻하지 않습니다.

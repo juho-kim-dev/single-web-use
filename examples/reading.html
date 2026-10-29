@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <title>SWU synthetic container reading</title>
+  <style>
+    body {
+      font: 18px/1.5 system-ui;
+      margin: 24px;
+      max-width: 720px;
+    }
+    #reading-container {
+      height: 240px;
+      overflow-y: auto;
+      border: 2px solid #537d6c;
+      padding: 12px;
+    }
+    p {
+      margin: 0 0 96px;
+    }
+  </style>
+  <h1>Bounded container reading fixture</h1>
+  <div
+    id="reading-container"
+    tabindex="0"
+    role="region"
+    aria-label="Synthetic reading container"
+  >
+    <p>
+      Synthetic section one. This text is intentionally public test content.
+    </p>
+    <p>
+      Synthetic section two. Only the current visible portion is reading
+      evidence.
+    </p>
+    <p>
+      Synthetic section three. Overlapping observations remain separate
+      captures.
+    </p>
+    <p>
+      Synthetic section four. A sampled boundary never proves complete reading.
+    </p>
+    <p>Synthetic section five. Nothing is submitted or automatically saved.</p>
+  </div>
+  <a href="/">Back to local demo</a>
+</html>

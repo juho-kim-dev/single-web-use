@@ -41,7 +41,9 @@
           <button id="pauseRuntime">Pause all browser work</button>
           <button id="resumeRuntime">Resume · require fresh observation</button>
         </div>
-        <p id="controlStatus" role="status">Read connector control status before input.</p>
+        <p id="controlStatus" role="status">
+          Read connector control status before input.
+        </p>
         <p class="note">
           Only the active tab in a focused window can be used. Input is
           synthetic. Credentials and sensitive transactions are outside
@@ -74,6 +76,50 @@
           ><button id="nextPage">Next page · same observation</button
           ><button id="discover">Discover capabilities</button>
         </div>
+        <h2>Bounded container reading</h2>
+        <p>
+          Uses an active site pack and synthetic element scroll. No automatic
+          saving or whole-page claim.
+        </p>
+        <label for="pageReadPack">Active pack ID</label
+        ><input id="pageReadPack" />
+        <label for="pageReadRole">Unique observed scroll role</label
+        ><input id="pageReadRole" />
+        <label for="pageReadRoles">Reading role IDs · comma separated</label
+        ><input id="pageReadRoles" />
+        <label for="pageReadSteps">Maximum additional scrolls · 0–8</label
+        ><input id="pageReadSteps" type="number" min="0" max="8" value="2" />
+        <label for="pageReadMs">Elapsed budget · 100–30000 ms</label
+        ><input
+          id="pageReadMs"
+          type="number"
+          min="100"
+          max="30000"
+          value="10000"
+        />
+        <label for="pageReadBytes">Accepted reading bytes · 1024–131072</label
+        ><input
+          id="pageReadBytes"
+          type="number"
+          min="1024"
+          max="131072"
+          value="65536"
+        />
+        <label for="pageReadDy">Synthetic downward delta · 1–1000</label
+        ><input id="pageReadDy" type="number" min="1" max="1000" value="300" />
+        <label for="pageReadOperation"
+          >Operation ID · keep for retry/status</label
+        ><input id="pageReadOperation" />
+        <div class="actions">
+          <button id="pageReadNew">New reading intent</button
+          ><button id="pageReadRun">Read container once</button
+          ><button id="pageReadProgress">Inspect progress / receipt</button
+          ><button id="pageReadCancel">Request stop</button>
+        </div>
+        <p>
+          Use each capture's pinned reading route for content. Unknown input is
+          never retried; cancellation cannot roll back delivery.
+        </p>
         <label for="saveName">Private saved content name</label
         ><input id="saveName" value="Selected reading" />
         <div class="actions">
@@ -128,14 +174,22 @@
           <button id="overlay">New personal overlay from loaded base</button>
         </div>
         <p id="revisionStatus" role="status">No definition loaded</p>
-        <label for="restoreRevision">Stored revision to restore as inactive draft</label>
-        <select id="restoreRevision"><option value="">Load a pack first</option></select>
+        <label for="restoreRevision"
+          >Stored revision to restore as inactive draft</label
+        >
+        <select id="restoreRevision">
+          <option value="">Load a pack first</option>
+        </select>
         <div class="actions">
           <button id="archivePack">Archive loaded pack</button>
           <button id="unarchivePack">Return from archive · inactive</button>
           <button id="restorePack">Restore selected revision · inactive</button>
         </div>
-        <p class="note">Versions remain preserved. Archiving a base does not disable separately active pinned overlays. Restore does not undo website changes.</p>
+        <p class="note">
+          Versions remain preserved. Archiving a base does not disable
+          separately active pinned overlays. Restore does not undo website
+          changes.
+        </p>
         <h2>Author a role and procedure</h2>
         <div id="authorFields">
           <label for="authorId">Pack ID</label><input id="authorId" />
@@ -276,7 +330,7 @@
     </main>
     <footer>
       <p id="status" role="status" aria-live="polite">Not connected</p>
-      <span>SWU 0.2.0 · local development preview</span>
+      <span>SWU 0.5.0 · local development preview</span>
     </footer>
     <script type="module" src="popup.js"></script>
   </body>

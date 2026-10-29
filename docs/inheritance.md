@@ -35,3 +35,10 @@ Additional inspected product evidence: `CocaPls/vault-izakaya` commit `ef995e837
 The filtered tree and compiled product do not establish the entire earlier TS/webctl lineage. Sakaba and gen3 direct source bodies remain unavailable/unverified. Personal pack bodies and private captures were not read or copied. Detailed historical completion and format migration remain open; no claim of full inheritance parity is made.
 
 No source code has been copied verbatim in this checkpoint. It is an independent implementation informed by the user's SWU contracts. If later code reuse occurs, add exact source commit/path/license and retained notices before publication. Historical public SWU is MIT; private vault publication permission does not remove third-party obligations.
+
+
+## Bounded read/scroll · 0.5.0
+
+Nomiya `fcfbe5a` source bodies inspected: `page-read.ts:PageReadRequestSchema,createPageReadReport,runPageRead`, `runtime.ts:startPageRead,pageReadStatus,cancelPageRead`, main dispatcher/UI and API pageRead contract. PAW counterparts: `pageRead`, `operation`, `cancel` → `page-reading.js`, Runtime, existing guarded `act`; tests `page-reading.test.js` and `popup-page-reading.test.js`. This is an independent bounded selected-container implementation using DOM synthetic scroll and existing retained evidence, not transplanted host/native wheel code. Nomiya's `wholePageRead:not-established` is preserved. Auto-saving, previous-fragment/other-region aggregation and native wheel routing are not parity claims; [detailed differences](page-reading.md). Existing92 API inventory entries are retained; pageReadStart/Status/Cancel now have these bounded counterparts. No live-site result is asserted.
+
+한국어 남은 범위: 이 후보는 제한된 현재 영역 읽기/스크롤 진행을 추가합니다. 네이티브 wheel·pointer·hover·drag·keys/검색 제출, 자동 페이지 조각 병합·갭/교체 판정, fingerprint/템플릿/형식 이전/녹화 및 독립 렌더 연구는 여전히 구현할 요청입니다. Sakaba/gen3 원본 미확보와 설치·실사이트 차단은 별개의 증거 한계입니다.
