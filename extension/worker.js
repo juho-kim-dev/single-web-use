@@ -2,6 +2,7 @@ import { pageCommand } from "./page.js";
 let binding = null,
   session = null,
   running = false,
+  connecting = false,
   epoch = 0;
 const base = "http://127.0.0.1:47831";
 async function request(route, body) {
@@ -24,16 +25,21 @@ async function request(route, body) {
 }
 async function foreground(bound) {
   if (!bound) throw Error("tab-not-bound");
-  const tab = await chrome.tabs.get(bound.tabId),
-    window = await chrome.windows.get(bound.windowId);
-  if (
-    !tab.active ||
-    tab.windowId !== bound.windowId ||
-    !window.focused ||
-    window.state === "minimized" ||
-    !/^https?:/.test(tab.url ?? "")
-  )
-    throw Error("bound-tab-must-be-active-in-focused-window");
+  const tab = await chrome.tabs.get(bound.tabId).catch(() => {
+    throw Error("bound-tab-unavailable");
+  });
+  if (!tab) throw Error("bound-tab-unavailable");
+  const window = await chrome.windows.get(bound.windowId).catch(() => {
+    throw Error("bound-window-unavailable");
+  });
+  if (!window) throw Error("bound-window-unavailable");
+  if (!tab.active) throw Error("bound-tab-inactive");
+  if (tab.windowId !== bound.windowId) throw Error("bound-tab-window-mismatch");
+  if (!window.focused) throw Error("bound-window-unfocused");
+  if (window.state === "minimized") throw Error("bound-window-minimized");
+  if (typeof tab.url !== "string" || !tab.url)
+    throw Error("bound-tab-url-unavailable");
+  if (!/^https?:/.test(tab.url)) throw Error("bound-tab-url-not-http");
   return tab;
 }
 async function execute(command) {
@@ -219,22 +225,48 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       return result;
     }
     if (message.type === "bind") {
-      if (running) throw Error("disconnect-before-rebind");
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      const bound = { tabId: tab.id, windowId: tab.windowId };
-      binding = bound;
-      await foreground(bound);
-      const result = await request("/bridge/bind", bound);
-      if (binding !== bound) throw Error("binding-changed-during-connect");
-      session = result.session;
-      documents.clear();
-      void loop();
-      return { connected: true };
+      if (running || connecting) throw Error("disconnect-before-rebind");
+      connecting = true;
+      const connectEpoch = epoch;
+      let bound;
+      try {
+        const tabs = await chrome.tabs
+          .query({ active: true, currentWindow: true })
+          .catch(() => {
+            throw Error("connect-tab-query-failed");
+          });
+        const tab = tabs?.[0];
+        if (
+          !tab ||
+          !Number.isInteger(tab.id) ||
+          !Number.isInteger(tab.windowId)
+        )
+          throw Error("connect-tab-not-found");
+        if (connectEpoch !== epoch)
+          throw Error("binding-changed-during-connect");
+        bound = { tabId: tab.id, windowId: tab.windowId };
+        binding = bound;
+        await foreground(bound);
+        if (binding !== bound) throw Error("binding-changed-during-connect");
+        const result = await request("/bridge/bind", bound);
+        if (binding !== bound) throw Error("binding-changed-during-connect");
+        session = result.session;
+        documents.clear();
+        void loop();
+        return { connected: true };
+      } catch (e) {
+        if (bound && binding === bound) {
+          binding = null;
+          session = null;
+          documents.clear();
+        }
+        throw e;
+      } finally {
+        connecting = false;
+      }
     }
     if (message.type === "disconnect") {
+      invalidate();
       session = null;
       binding = null;
       await request("/bridge/disconnect", {});

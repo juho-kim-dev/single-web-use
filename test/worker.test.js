@@ -99,6 +99,7 @@ test("known missing binding/focus are not-sent; failures after possible script e
       "missing-binding",
       "focus-refusal",
       "script-failure",
+      "post-focus-refusal",
     ]) {
       let listener,
         calls = 0,
@@ -139,7 +140,10 @@ test("known missing binding/focus are not-sent; failures after possible script e
         },
         windows: {
           get: async () => ({
-            focused: !(scenario === "focus-refusal" && replies.length > 0),
+            focused: !(
+              (scenario === "focus-refusal" && replies.length > 0) ||
+              (scenario === "post-focus-refusal" && calls > 1)
+            ),
             state: "normal",
           }),
           onFocusChanged: event,
@@ -179,7 +183,9 @@ test("known missing binding/focus are not-sent; failures after possible script e
       const receipt = replies.find((r) => r.id === "act").result;
       assert.equal(
         receipt.delivery,
-        scenario === "script-failure" ? "unknown" : "not-sent",
+        ["script-failure", "post-focus-refusal"].includes(scenario)
+          ? "unknown"
+          : "not-sent",
       );
       assert.equal(
         calls,
