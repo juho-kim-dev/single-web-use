@@ -1,0 +1,15 @@
+{
+  "operationId": "reading-demo-1",
+  "packId": "container-demo",
+  "packRevision": "6c76c5d8b81eaa33681843ab2f3f08eedede59c1a30d4a3aa7456de1b8da73f7",
+  "effectiveRevision": "6c76c5d8b81eaa33681843ab2f3f08eedede59c1a30d4a3aa7456de1b8da73f7",
+  "scrollRole": "container",
+  "read": {
+    "roles": ["content"],
+    "kinds": ["text", "link"]
+  },
+  "maxSteps": 2,
+  "maxElapsedMs": 10000,
+  "maxContentBytes": 65536,
+  "dy": 300
+}

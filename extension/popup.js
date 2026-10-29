@@ -557,3 +557,76 @@ action("documentExport", async () => {
       "historical reading content and integrity manifest; review private content before sharing",
   });
 });
+
+$("pageReadOperation").value = crypto.randomUUID();
+let pageReadIntent = null;
+const pageReadFields = () =>
+  JSON.stringify([
+    $("pageReadPack").value,
+    $("pageReadRole").value,
+    $("pageReadRoles").value,
+    $("readKinds").value,
+    $("pageReadSteps").value,
+    $("pageReadMs").value,
+    $("pageReadBytes").value,
+    $("pageReadDy").value,
+    $("pageReadOperation").value,
+  ]);
+action("pageReadNew", async () => {
+  $("pageReadOperation").value = crypto.randomUUID();
+  pageReadIntent = null;
+});
+action("pageReadRun", async () => {
+  const state = pageReadFields();
+  if (!pageReadIntent || pageReadIntent.state !== state) {
+    const packId = $("pageReadPack").value,
+      operationId = $("pageReadOperation").value;
+    const args = {
+      operationId,
+      packId,
+      scrollRole: $("pageReadRole").value,
+      read: {
+        roles: $("pageReadRoles")
+          .value.split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        kinds: $("readKinds").value.split(","),
+      },
+      maxSteps: Number($("pageReadSteps").value),
+      maxElapsedMs: Number($("pageReadMs").value),
+      maxContentBytes: Number($("pageReadBytes").value),
+      dy: Number($("pageReadDy").value),
+    };
+    const pack = await api("packGet", { id: packId });
+    if (pageReadFields() !== state)
+      throw Error("Reading fields changed; nothing started");
+    if (!pack.active || !pack.activeEffectiveRevision)
+      throw Error("Active site pack required");
+    pageReadIntent = {
+      state,
+      args: {
+        ...args,
+        packRevision: pack.active,
+        effectiveRevision: pack.activeEffectiveRevision,
+      },
+    };
+  }
+  const result = await api("pageRead", pageReadIntent.args);
+  if (pageReadFields() === state) showReading(result);
+  else
+    report({
+      operationId: result.operationId,
+      reason: result.reason,
+      next: "Reading fields changed; inspect original operation receipt",
+    });
+});
+action("pageReadProgress", async () =>
+  showReading(
+    await api("operation", { operationId: $("pageReadOperation").value }),
+  ),
+);
+action("pageReadCancel", async () =>
+  showReading(
+    await api("cancel", { operationId: $("pageReadOperation").value }),
+  ),
+);

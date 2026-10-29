@@ -92,3 +92,36 @@ The primary CLI reviewed supplied public source without executing tools. The sup
 The final CLI source review confirmed those findings resolved and reported no further concrete defect in the supplied changed scope. Normal supervisor tests pass66/66 with0 skipped; check/build and package privacy inspection pass. Runtime pause reuses existing cancel/receipts and StateStore; restoration reuses preserved revisions instead of copying files or introducing another history engine. Archived bases remain available to pinned overlays, stated in UI/contracts. No safe further deletion was identified that preserves requested behavior and validation boundaries.
 
 Unverified: installed extension and actual MV3/OS process lifecycle, foreground visual/accessibility behavior, real websites, native input release and all historical-source parity. Storage failure keeps current memory paused but cannot promise restart persistence; this boundary is explicit.
+
+## Bounded container reading · Ponytail full review
+
+What this change does: one input-capable pageRead request pins an active site/effective definition, observes selected within-container reading, then uses existing guarded synthetic scroll under finite budgets. Operation/cancel expose bounded progress and durable idempotent receipts, without an automatic second content store. Review load assumption: one runtime with concurrent CLI/MCP/popup clients; the same-surface queue and existing64-in-flight limit remain authoritative.
+
+Connected review: contracts → runtime dispatch/inFlight/pause/cancel → new page-reading orchestrator → existing read/role resolution/act/worker/page collector → MCP/CLI/ordinary popup → examples/docs/tests. pack schema canonical fields are unchanged. New optional scroll metrics do not inject defaults into old observations or definitions. Stored definitions are never current-input authority.
+
+Fixed during self-review:
+
+1. A mutable progress report initially shared the parent journal's pending receipt object. Clone at reservation so unsaved progress cannot mutate StateStore; regression checks the journal remains pending/empty while live progress has a capture, plus restarted pending returns unknown without commands.
+2. Existing observationDiff did not name the new scroll metric changes. Add that field and assert compatible before/after observations expose the metric difference without deletion/currentness inference.
+
+Reviewed boundary tests include multiple accepted captures, own within-root selection, no raw-content ledger multiplication, URL/document/generation/viewport/user/session mismatch, missing/ambiguous/truncated scroll roles, unknown metrics, unchanged offsets, zero-step/content/time budgets, parent/child reservation interruption, unleased/leased cancellation and leased pause/fence, exact reply/pause races, same-ID conflicting intent, restart, pinned definitions after activation change/deactivation, final receipt-save failure and real popup-module request/late-field behavior. Existing canonical pack/overlay/control tests pass in the normal suite. No new service/dependency/updater/native permission was introduced.
+
+Initial verdict: hold version promotion while the restricted MXC suite remained78/81 with0 skips. Supervisor subsequently checked a hash-matched implementation in a separate environment: normal concurrent tests81/81,0fail/0skip, check/build pass. Finalization compares all src/extension/test files with that manifest before changes: no code/test divergence or missing manifest entries. Six documentation/example files differ: README.md, README.ko.md, docs/review.md, docs/validation.md, docs/page-reading.md and examples/page-read.json. The finalization changes executable files only for version strings (CLI/runtime/MCP, manifest and popup footer), plus package/lock versions; no implementation/test logic changes.
+
+Final Ponytail verdict: source checkpoint ready for supervisor publication review after local syntax/build/version checks; installed/live evidence remains absent. Existing pending/unknown fences, canonical pack schemas and source-only boundaries remain intact. No new dependency, service, permission or general abstraction is added. A0.5.0 development version is not a release or all-sites claim.
+
+Not checked: actual installed extension, MV3 termination, popup visuals/accessibility, real-site usefulness, native wheel/keys/release or cross-platform/client adoption. Capture routes remain subject to existing memory retention and expire at restart; only explicit saved content/documents persist text. Time guards bound further input/acceptance, not disk completion or rollback of an in-flight dispatch. Whole-page reading remains not-established. No further concrete self-review finding remains in the scoped source, but a separate supervisor review is still required.
+
+
+## Final supervisor review adjustment
+
+The synthetic fixture previously proved metric collection and stale-offset refusal, but not successful scroll delivery. Extend that same fixture with a fresh target/unique ID and actual displacement plus post-scroll measured-y assertions. Exclusion/fill/stale checks remain intact. This is a test-only change; production behavior is unchanged. The supervisor's prior81/81 pass predates this assertion, so final full-suite execution is pending supervisor review. Local syntax/build/network-free checks cannot substitute for that run.
+
+Correct the main92-command inventory pageReadStart/Status/Cancel rows to bounded0.5 counterparts and label pause/archive/restore implemented partial0.4 contracts. Current Korean parity summary distinguishes0.5 responsibilities from explicitly historical sections and remaining native/whole-page/live gaps. No further feature scope or new browser route is added. Verdict: hand off exact unstaged files for supervisor final test/review/commit; do not interpret earlier81/81 as a pass of the new assertion.
+
+
+## Supervisor final review · 2026-10-29 · 0.5.0
+
+Reviewed the new page-reading driver with connected runtime serialization, reservation/cancellation/pause, retained reading routes, collector/action scroll guards, strict API/MCP contracts, ordinary popup handlers and tests. Reused existing observation/read/act/store/operation paths without a new service or content archive. The two final findings were a missing successful browser scroll assertion and stale current-status inventory rows; both were corrected by the primary CLI. Supervisor reran the adjusted final suite:81/81 pass,0fail,0skip, including actual synthetic displacement and measured offset. Check/build/diff whitespace gates pass. No additional concrete correctness finding or justified simplification remains in this scoped review. Review scope and source hashes are retained in ignored local evidence; original private discussions are not published.
+
+This passes source delivery review only. It does not establish full legacy parity, installed extension usability, live-site success, native input, or browser-tool recovery. Capture routes still expire with memory retention/restart, unknown delivery remains fenced, and whole-page reading stays not-established.

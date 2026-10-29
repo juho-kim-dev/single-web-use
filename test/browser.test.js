@@ -35,7 +35,10 @@ test(
   try {
     const ctx={tabId:1,session:'test-session',deadline:Date.now()+30000};
     const card=document.createElement('a');card.id='card';card.href='https://example.com/one';card.style='position:absolute;left:450px;top:160px';const title=document.createElement('span');title.textContent='OBSERVED_TITLE';card.append(title);document.body.append(card);
+    const scroller=document.createElement('div');scroller.id='read-region';scroller.style='position:absolute;left:450px;top:240px;width:200px;height:100px;overflow:auto';scroller.innerHTML='<p style="height:600px">Synthetic scrolling text</p>';document.body.append(scroller);
     const o=pageCommand('observe',{selectors:['#article','#search']},ctx),text=o.nodes.map(n=>n.text).join(' ');
+    const region=o.nodes.find(n=>n.locator?.selector==='#read-region');assert(region.scroll?.clientHeight===100&&region.scroll.height>=600&&region.scroll.y===0,'observed scroll sample missing');
+    scroller.scrollTop=20;const staleScroll=pageCommand('act',{action:{operationId:'stale-scroll',observationId:o.id,target:region.ref,kind:'scroll',dy:100,intent:'scroll'},before:o,target:region},ctx);assert(staleScroll.delivery==='not-sent','changed scroll offset accepted');scroller.scrollTop=0;
     const link=o.nodes.find(n=>n.locator?.selector==='#card');assert(link.text===''&&composeText(o,link).text==='OBSERVED_TITLE','bounded descendant link composition failed');
     assert(text.includes('VISIBLE_WORD'),'visible missing');
     for(const word of ['OFFSCREEN_WORD','HIDDEN_WORD','SENSITIVE_WORD','CLIPPED_OUT','PASSWORD_VALUE','ACCESSIBILITY_ONLY'])assert(!text.includes(word),'leaked '+word);
@@ -54,6 +57,13 @@ test(
     const next=pageCommand('observe',{selectors:[]},ctx),nextTarget=next.nodes.find(n=>n.locator?.selector==='#search');
     const changed=pageCommand('act',{action:{...a,operationId:'focus-change',target:nextTarget.ref,expectedValue:'SWU',text:'DO_NOT_OVERWRITE'},before:next,target:nextTarget},ctx);
     assert(changed.delivery==='unknown'&&field.value==='site-change','focus-handler value overwritten');
+    const scrollBefore=pageCommand('observe',{selectors:['#read-region']},ctx),scrollTarget=scrollBefore.nodes.find(n=>n.locator?.selector==='#read-region'),previousY=scroller.scrollTop;
+    assert(scrollTarget?.scroll?.y===previousY,'fresh scroll position mismatch');
+    const scrollReceipt=pageCommand('act',{action:{operationId:'successful-scroll-1',observationId:scrollBefore.id,target:scrollTarget.ref,kind:'scroll',dy:100,intent:'scroll'},before:scrollBefore,target:scrollTarget},ctx);
+    assert(scrollReceipt.delivery==='synthetic-dispatched','fresh scroll withheld '+scrollReceipt.reason);
+    assert(scroller.scrollTop>previousY,'synthetic scroll did not displace the element');
+    const scrollAfter=pageCommand('observe',{selectors:['#read-region']},ctx),measured=scrollAfter.nodes.find(n=>n.ref===scrollTarget.ref);
+    assert(measured?.scroll?.y===scroller.scrollTop&&measured.scroll.y>previousY,'post-scroll observed offset does not match the element');
     document.getElementById('result').textContent='PASS_SYNTHETIC_DOM';
   } catch(e) {document.getElementById('result').textContent='FAIL: '+e.message;}
   </script>`;

@@ -1,4 +1,4 @@
-# Validation record · 0.4.0 increment
+# Validation record · 0.5.0 increment
 
 Environment: Windows, Node 24.22.1, locked Zod 4.6.7. Tests use temporary private state; no Nomiya installation/data or existing user browser profile is changed. No Actions runs, extension installation or real-site trial were performed. The supervisor published the reviewed0.2 checkpoint through PR2; implementation, local tests and live validation remain separate.
 
@@ -53,3 +53,40 @@ Follow-up CLI review found selection/reopen identity loss and concurrent popup s
 The separate primary CLI reviewed source only, identified the pause-boundary and editor-overwrite findings, and confirmed their fixes in follow-up source reviews. Supervisor check/test/build and package inspection passed. The0.4 package lists71 entries with0 private/cache files. Dependencies are unchanged from the0.3 audit with0 reported vulnerabilities; no separate new audit is implied.
 
 Graphify0.9.95 AST output in ignored `.local/graphify-040/` covers the same15 source/extension files:147 nodes,357 edges,8 communities. Source SHA-256 values match before/after, base commit plus dirty provenance are retained and the final commit is checked against them. Diagnostics report19 same-endpoint relation variants,0 missing/dangling/self-loop edges. Report/HTML generated, visual inspection not performed. No personal source or semantic LLM extraction is included.
+
+## Bounded container reading · initial restricted MXC results
+
+Base/branch: published0.4 `80df6e7d8140bb2e415b451fbdb4d4b6e4d31525`, `codex/paw-swu-page-reading`. Primary CLI executed these checks in MXC workspace-write; this is separate from the previous source-only reviews.
+
+- Workspace `.local` read/write and shell process probe succeeded. Default sandbox TEMP permitted creation but StateStore rename failed EPERM in all9 initial new tests. Only child-process TEMP/TMP were redirected to the already authorized ignored workspace `.local/test-temp`; no ACL, isolation, accounts, global config or production persistence behavior changed.
+- Final normal concurrent `npm test`: **81 tests,78 passed,3 failed,0 skipped**. New pageRead/popup tests: **15 passed,0 failed,0 skipped**. Failures remain synthetic Chrome exit2147483651, real CLI status subprocess exit1, and authenticated HTTP transport fetch connect EACCES on loopback. No failed test was skipped, serialized or retried to manufacture green. The CLI subprocess assertion alone does not expose its cause; loopback failure is independently explicit. Supervisor must validate these paths outside this restricted invocation.
+- `npm run check` and `npm run build` passed on final source. Existing readonly installed Prettier formatted only explicit owned JS/JSON/HTML files. The synthetic Chrome self-check gained metric/stale-offset assertions but could not execute successfully here; it is not collector/live proof.
+- Graphify local AST covered16 `src/*.js` and `extension/*.js` files in ignored `.local/graphify-page-reading`:150 nodes,372 directed edges,8 communities; source SHA-256 unchanged before/after extraction, base commit and dirty state recorded. Diagnostics:20 same-endpoint relation variants,0 missing/dangling/self-loop edges. Graph JSON/report generated; no visual/semantic/private-corpus extraction or measured performance claim.
+- Package dry-run/owned-file hashes are saved privately for supervisor handoff. No remote writes, Actions, account/auth changes, browser installation, foreground/live-site trial or permission expansion occurred.
+
+At this initial MXC checkpoint, full validation had not passed and no version promotion/local delivery commit was made. The later supervisor verification below supplies the separate successful integration evidence; the original failures remain recorded. The Computer Use stop was not bypassed with another UI route, CDP, hidden profile or shell navigation. Synthetic headless Chrome was attempted only by the pre-existing test and failed; no product browser was controlled.
+
+
+## 0.5.0 supervisor verification and finalization
+
+The supervisor tested an exact hash-confirmed copy of the implementation after the restricted MXC handoff. Its normal concurrent `npm test` passed **81/81,0fail,0skip**; `npm run check` and `npm run build` passed. The primary CLI inspected the supplied check/test logs and compared the supervisor SHA-256 manifest for all74files with its own tree before finalization. Every src/extension/test file matches; none is omitted from the manifest. Six documentation/example differences were found: README.md, README.ko.md, docs/review.md, docs/validation.md, docs/page-reading.md and examples/page-read.json. The example now pins the unchanged synthetic pack's actual canonical hashes, not placeholder hashes.
+
+The finalization updates only version literals in CLI/runtime/MCP/manifest/popup footer and package/lock metadata to0.5.0, plus public status documentation. No implementation or test behavior differs from the supervisor-verified source. The primary CLI runs syntax/build and focused version/MCP/example-hash checks on final metadata. It does not repeat known unavailable MXC loopback/Chrome checks or claim its own81/81 execution. Full success is supervisor evidence;78/81 is the separately retained restricted-environment result.
+
+Final source hashes, manifest comparisons, package allowlist inspection and Graphify AST provenance remain in ignored local evidence. No private validation paths, conversations, captures or logs are packaged. At this checkpoint Browser Computer Use was stopped pending a human opening Google home; no installed extension, foreground/live-site or native-input verification is implied. Remote writes/CI/releases remain supervisor-owned and were not performed by this worker.
+
+
+## Review adjustment before final supervisor execution
+
+After the supervisor's81/81 pass, the existing synthetic Chrome fixture gained a successful real `pageCommand` scroll path: fresh observation and current container target, a unique operation ID, synthetic-dispatched receipt, increased actual scrollTop, and a subsequent observation whose measured y equals that scrollTop. Existing exclusions, fill, duplicate, mutation, focus and stale-offset checks remain. No new browser route/profile mechanism or user UI access was added.
+
+At this handoff, the earlier81/81 result predated the added assertion and final execution was still pending. The later final gate below supersedes that pending state. The primary CLI runs syntax/build and network-free checks only; it does not rerun the known-unavailable MXC Chrome/loopback tests. Runtime/extension implementation is unchanged from the verified source; the additional test is the sole post-verification test-logic difference. Legacy inventory current rows now state pageRead/operation/cancel bounded counterparts and preserve pause/archive/restore partial-contract distinctions. Installed/live evidence remains absent.
+
+Final adjusted-source checks by the primary CLI: `npm run check`, `npm run build`, version/runtime/MCP/CLI/example-pin checks passed; network-free pageRead/popup regressions passed15/15 with0fail/0skip. These do not execute the new browser assertion. Package dry-run remains78 allowlisted files with0 private/cache/workflow entries. Exact owned hashes are refreshed for supervisor handoff; no staging/commit was attempted in this final review turn.
+
+
+## Final independent gate · 2026-10-29 · 0.5.0
+
+After exclusive handoff from the primary CLI, the supervisor ran the final source with normal concurrent npm test: **81 passed, 0 failed, 0 skipped**, including the newly added successful synthetic element scroll, actual scrollTop displacement and subsequent observed offset assertion in installed headless Chrome. npm run check, npm run build and git diff --check passed. The HTTP authentication/transport and real CLI/MCP subprocess checks also passed. This supersedes the earlier pending-assertion status; restricted MXC results remain separate historical evidence. No runtime logic changed after this final execution; only review/validation status prose was updated.
+
+After the user reported opening Google home, the same Windows Computer Use path was retried. The returned Chrome window still had a new-tab title, and capture again stopped because the tool could not establish the current browser URL confidently. No input was sent. Whether the user-opened page and the returned window were the same was not established. No alternate UI route was used to evade the stop. This is a browser-tool blocker, separate from GitHub access and source checks. Extension loading/pairing, foreground behavior, real-site usefulness and native input remain unverified; synthetic tests are not substitutes.

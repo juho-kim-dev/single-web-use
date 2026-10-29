@@ -1,4 +1,4 @@
-# Nomiya API 전체 목록과 PAW 대응 — 0.4.0
+# Nomiya API 전체 목록과 PAW 대응 — 0.5.0
 
 Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록된 92개 명령과 src/main.ts의 연결 지점을 대조한 누락 점검표다. 등록·호출 지점 확인은 각 함수의 모든 동작이나 과거 실측을 검증했다는 뜻이 아니다. 상세 함수별 근거는 [계승표](legacy-parity.md), 새 구현의 실제 검사 범위는 [검증 기록](validation.md)을 따른다.
 
@@ -37,7 +37,7 @@ Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록�
 | website/interaction | `act` | 부분 대응 | 합성 fill/링크 click/요소 scroll만 지원. 네이티브 move/hover/hold/drag/keys/clipboard 등은 미구현. |
 | website/interaction | `conditionalClick` | 미구현 | 목표 상태가 이미 충족됐으면 입력하지 않고 그렇지 않을 때 최대 한 번 클릭하는 별도 계약. 일반 packRun과 동일시하지 않는다. |
 | website/interaction | `replay` | 부분 대응 | packRun의 판본 고정 역할 절차와 단일 클릭 뒤 제한된 도착 확인. 네이티브 검색 제출·기존 녹화 형식·자동 계획기는 미계승. |
-| website/interaction | `pageReadStart` | 미구현 | 제한된 스크롤·추가 읽기·진행·취소의 연결 경로. 수동 섹션 append가 이를 대신하지 않는다. |
+| website/interaction | `pageReadStart` | 부분 대응 · 0.5 | `pageRead`가 활성 site/effective revision·유일한 관측 컨테이너를 고정해 필터 읽기와 제한된 합성 요소 스크롤을 실행한다. 횟수·시간·내용 예산과 출처/범위를 보존하며 native wheel·자동 저장·완독은 아니다. |
 | swu/discovery | `apiInfo` | 부분 대응 | MCP 스키마·capabilities. 현재 실행 허가는 별도이며 원본 명령 계약과 호환되지 않는다. |
 | swu/discovery | `apiCommands` | 부분 대응 | MCP 스키마·capabilities. 현재 실행 허가는 별도이며 원본 명령 계약과 호환되지 않는다. |
 | swu/connection | `tabs` | 미구현 | 연결 가능한 기존 탭 목록/선택 API. 현재 확장 UI는 활성 탭만 연결한다. |
@@ -54,11 +54,11 @@ Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록�
 | swu/diagnostics | `contentRefreshStatus` | 미구현 | 상시 관찰/갱신 정책·상태. 수동 observe와 별개이며 감시 프로세스를 자동 설치하지 않는다. |
 | swu/diagnostics | `viewportMonitor` | 미구현 | 상시 관찰/갱신 정책·상태. 수동 observe와 별개이며 감시 프로세스를 자동 설치하지 않는다. |
 | swu/diagnostics | `renderFrameStatus` | 연구 기능 미구현 | 프레임 구독·보관·본문 출처 대응·차이. DOM 관찰 이력으로 대체됐다고 하지 않는다. |
-| swu/diagnostics | `pageReadStatus` | 미구현 | 제한된 스크롤·추가 읽기·진행·취소의 연결 경로. 수동 섹션 append가 이를 대신하지 않는다. |
+| swu/diagnostics | `pageReadStatus` | 부분 대응 · 0.5 | `operation {operationId}`가 읽기 실행 중 제한된 캡처 경로/측정값/입력 영수증을, 종료 후 지속된 결과를 반환한다. 원문은 기존 관측 보관 한도 안에서 명시 read하며 재시작 후 자동 재개하지 않는다. |
 | swu/diagnostics | `pageDocumentPublication` | 부분 대응 | 명시 저장/읽기/문서 내보내기. 고정 파일 경로 발행·유효성 추적·자동 갱신 상태는 미구현. |
 | swu/execution | `cancel` | 부분 대응 | operation별 취소와 도착 관찰 중단, 불명 입력 재시도 금지. 전역 작업면 복구/입력 되돌리기는 미계승. |
-| swu/execution | `pause` | 부분 대응 | 저장되는 pause/resume, 대기 작업·입력 참조 무효화와 unknown fence 보존. 원본 모니터·네이티브 입력 해제는 미계승. |
-| swu/execution | `pageReadCancel` | 미구현 | 제한된 스크롤·추가 읽기·진행·취소의 연결 경로. 수동 섹션 append가 이를 대신하지 않는다. |
+| swu/execution | `pause` | 부분 대응 · 0.4 | 저장되는 pause/resume, 즉시 메모리 차단, 대기 작업·입력 참조 epoch 무효화와 unknown fence 보존을 구현했다. 원본 모니터·네이티브 입력 해제는 미계승. |
+| swu/execution | `pageReadCancel` | 부분 대응 · 0.5 | `cancel {operationId}`가 parent/child를 연결해 이후 읽기·입력을 중단 요청한다. lease 뒤 전달 가능성은 unknown/fence로 남고 rollback·native release를 주장하지 않는다. |
 | swu/execution | `pointerRecover` | 미구현 | 지속 포인터 상태·실제 커서 관찰·원래 수신자 release/복구·표시 설정. 네이티브 어댑터와 함께 검증해야 한다. |
 | swu/execution | `pointerConfigure` | 미구현 | 지속 포인터 상태·실제 커서 관찰·원래 수신자 release/복구·표시 설정. 네이티브 어댑터와 함께 검증해야 한다. |
 | swu/execution | `viewportMonitorConfigure` | 미구현 | 상시 관찰/갱신 정책·상태. 수동 observe와 별개이며 감시 프로세스를 자동 설치하지 않는다. |
@@ -81,8 +81,8 @@ Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록�
 | swu/knowledge | `recordDiscard` | 미구현 | 실행/사용자 입력의 명시 녹화와 초안 생성/폐기. 수동 절차 편집과 별개다. |
 | swu/storage | `packs` | 부분 대응 | 버전 있는 팩 목록. 원본 저장 형식은 호환되지 않는다. |
 | swu/storage | `read` | 부분 대응 | 원본 read는 팩 읽기이므로 새 packGet에 대응한다. 새 read(콘텐츠 읽기)와 이름만으로 동일시하지 않는다. |
-| swu/storage | `archive` | 부분 대응 | packArchive/Unarchive가 충돌 검사·원본 판본 보존·보관 상태를 제공한다. 파일 이동 형식이 아니며 pinned overlay의 base는 보존한다. |
-| swu/storage | `restore` | 부분 대응 | packRestore가 저장 판본을 비활성 초안으로 복구하고 새 검사/활성화를 요구한다. 원본 backup 파일/설치 형식 이전과 사이트 상태 복구는 아니다. |
+| swu/storage | `archive` | 부분 대응 · 0.4 | packArchive/Unarchive가 충돌 검사·원본 판본 보존·보관 상태를 제공한다. own active만 해제하고 pinned overlay base는 보존한다. Nomiya 파일 이동/백업 형식은 아니다. |
+| swu/storage | `restore` | 부분 대응 · 0.4 | packRestore가 저장 판본을 비활성 초안으로 복구하고 새 검사/활성화를 요구한다. 원본 backup 파일/설치 형식 이전과 사이트 상태 복구는 아니다. |
 | swu/storage | `export` | 부분 대응 | 정의만의 packExport/Import와 충돌 검사. 기존 Nomiya/Izakaya 데이터 이전은 별도 미구현. |
 | swu/storage | `import` | 부분 대응 | 정의만의 packExport/Import와 충돌 검사. 기존 Nomiya/Izakaya 데이터 이전은 별도 미구현. |
 | swu/storage | `pageDocumentExports` | 부분 대응 | documentCreate/Append/List/Read/Export. 명시 저장한 호환 섹션·재시작·무결성·선택적 Markdown/메타데이터 묶음. 원본 형식/자동 합성 문서와 호환되지 않는다. |
@@ -99,4 +99,11 @@ Nomiya fcfbe5a197b688b1640766b67d4d79b6e505f683의 src/api-catalog.ts에 등록�
 | swu/research | `accessibility` | 연구 기능 미구현 | 점/픽셀/렌더 영역/ASCII/브라우저 배치/화면/AX 증거. 실제 렌더러·좌표/시간 대응 검증이 별도로 필요하다. |
 | swu/research | `lab` | 과거 시험 자산 | 과거 로컬 시험 탭 생성/연결. 새 합성 검사도 실사이트 검증을 대신하지 않는다. |
 
-추가 누락으로 확인한 전역 pause, 팩 archive/restore, 탭 목록, 목표 상태 기반 conditionalClick, 제한된 pageRead, 자동 갱신/수집 진단, 공통 타입/템플릿과 녹화 기능은 열린 작업으로 유지한다. 구현 순서는 이미 준비된 기반을 재사용하는 저장/상태 관리 → 조건부 동작/읽기 → 네이티브 소유권/검증 → 경험 지식/기록 및 독립 렌더 연구로 구체화한다. 자동 권한 확대·감시 활성화로 해석하지 않는다.
+현재0.5는 전역 pause와 보존형 pack archive/restore(0.4), 제한된 현재 컨테이너 pageRead/진행/취소(0.5)의 부분 대응을 구현했다. 탭 목록·목표 상태 기반 conditionalClick·자동 갱신/수집 진단·공통 타입/템플릿·녹화는 열린 요청으로 유지한다. 네이티브 소유권/검증과 경험 지식/형식 이전 및 독립 렌더 연구도 남아 있다. 구현된 부분 대응은 원본 native/file/whole-page 계약 전체의 동등성이나 실사이트 성공을 뜻하지 않는다.
+
+
+## Bounded read/scroll · 0.5.0
+
+Nomiya `fcfbe5a` source bodies inspected: `page-read.ts:PageReadRequestSchema,createPageReadReport,runPageRead`, `runtime.ts:startPageRead,pageReadStatus,cancelPageRead`, main dispatcher/UI and API pageRead contract. PAW counterparts: `pageRead`, `operation`, `cancel` → `page-reading.js`, Runtime, existing guarded `act`; tests `page-reading.test.js` and `popup-page-reading.test.js`. This is an independent bounded selected-container implementation using DOM synthetic scroll and existing retained evidence, not transplanted host/native wheel code. Nomiya's `wholePageRead:not-established` is preserved. Auto-saving, previous-fragment/other-region aggregation and native wheel routing are not parity claims; [detailed differences](page-reading.md). Existing92 API inventory entries are retained; pageReadStart/Status/Cancel now have these bounded counterparts. No live-site result is asserted.
+
+한국어 남은 범위: 이 후보는 제한된 현재 영역 읽기/스크롤 진행을 추가합니다. 네이티브 wheel·pointer·hover·drag·keys/검색 제출, 자동 페이지 조각 병합·갭/교체 판정, fingerprint/템플릿/형식 이전/녹화 및 독립 렌더 연구는 여전히 구현할 요청입니다. Sakaba/gen3 원본 미확보와 설치·실사이트 차단은 별개의 증거 한계입니다.

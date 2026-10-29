@@ -81,3 +81,10 @@ R21/R22 continuations now pin observation + stored/effective definition revision
 | R33 | Preserve pack versions while archiving or restoring | Archive checks exact draft/active state; unarchive and chosen revision restore return inactive, clear prior tests and require fresh test/activation. Original definitions/pinned bases survive. Existing Nomiya file backup semantics are compared explicitly, not presented as format compatibility. |
 
 The0.3 increment was reviewed and published through PR3 as main deecb7e. Public source delivery is confirmed; installed/live/browser/client evidence is still unverified. Details: [control and lifecycle](control-and-lifecycle.md).
+
+
+## Bounded page reading · 0.5.0 (existing33-entry ledger)
+
+R07–R13, R14/R20, R21–R24, R26/R31 and R32 gain a connected `pageRead` path (`src/page-reading.js`, runtime/contracts, collector scroll sample, MCP/CLI/popup), not a new interpretation of the saved discussions. Exact active/effective pack pins, unique untruncated scroll target, within-container selected evidence, compatibility/byte/time/step limits, parent/child idempotency and cancel/pause epochs are covered in `page-reading.test.js`; actual popup args/late-field guards are in `popup-page-reading.test.js`. Capture routes remain historical, never input authority; operation metadata has no duplicate raw-content store. Existing R30 documents remain explicit optional preservation. [Exact contract and source comparison](page-reading.md).
+
+Not delivered by this increment: native wheel/pointer/keys/query submission, all-container/full-page aggregation, PageObservation replacement/gap reconciliation, templates/fingerprint/migration/recording, renderer research or installed/live browser evidence. Unit success does not close R01/R18 live gates. Supervisor verification of a hash-matched source copy passed81/81 with0 skips, check and build; restricted MXC integration failures remain separate environment evidence. No private Yarnbox bodies/attachments enter this ledger.

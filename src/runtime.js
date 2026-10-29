@@ -10,6 +10,7 @@ import { hash } from "./storage.js";
 import { Packs, checkConditions, applicable, resolveRoles } from "./packs.js";
 import { inside, itemFor, paginate, diffObservations } from "./reading.js";
 import { ReadingDocuments } from "./documents.js";
+import { runPageReading } from "./page-reading.js";
 import { navigationDestination, observeArrival } from "./arrival.js";
 
 export class Runtime {
@@ -28,6 +29,7 @@ export class Runtime {
     this.inFlight = new Map();
     this.children = new Map();
     this.lastPoll = 0;
+    this.readingProgress = new Map();
     this.paused = store.data.paused === true;
     this.pauseEpoch = 0;
     this.invalidated = new Set();
@@ -397,7 +399,7 @@ export class Runtime {
       "documentExport",
       "capabilities",
     ];
-    const act = ["act", "packRun", "cancel", "operation"];
+    const act = ["act", "pageRead", "packRun", "cancel", "operation"];
     return {
       primitives: purpose === "read" || purpose === "manage" ? [] : primitives,
       procedures: purpose === "read" || purpose === "manage" ? [] : procedures,
@@ -417,7 +419,7 @@ export class Runtime {
       ],
     };
   }
-  async act(value) {
+  async act(value, control = null) {
     const a = actionSchema.parse(value),
       digest = hash(a),
       old = this.store.data.operations[a.operationId];
@@ -450,7 +452,13 @@ export class Runtime {
           outcome: "unknown",
           reason: "cancelled-before-delivery",
         };
-      else if (session !== this.session || this.fenced || this.paused)
+      else if (
+        session !== this.session ||
+        this.fenced ||
+        this.paused ||
+        pauseEpoch !== this.pauseEpoch ||
+        (control && !control.valid())
+      )
         receipt = {
           accepted: true,
           delivery: "not-sent",
@@ -458,7 +466,13 @@ export class Runtime {
           reason: "binding-or-fence-changed-before-delivery",
         };
       else {
-        const r = await this.command("act", { action: a, before, target });
+        const r = await this.command(
+          "act",
+          { action: a, before, target },
+          control
+            ? Math.max(1, Math.min(this.timeout, control.deadline - Date.now()))
+            : this.timeout,
+        );
         receipt = receiptSchema.parse(r);
         if (receipt.after)
           receipt.after = this.retain(receipt.after, pauseEpoch);
@@ -741,7 +755,7 @@ export class Runtime {
     if (method === "cancel") return this.cancel(a.operationId);
     if (method === "status")
       return {
-        version: "0.4.0",
+        version: "0.5.0",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,
         session: this.session,
@@ -751,20 +765,21 @@ export class Runtime {
       };
     if (method === "operation")
       return structuredClone(
-        this.store.data.operations[a.operationId]?.receipt ?? {
-          accepted: false,
-          delivery: "not-sent",
-          outcome: "unknown",
-          reason: "operation-not-found",
-        },
+        this.readingProgress.get(a.operationId) ??
+          this.store.data.operations[a.operationId]?.receipt ?? {
+            accepted: false,
+            delivery: "not-sent",
+            outcome: "unknown",
+            reason: "operation-not-found",
+          },
       );
-    const operationId = ["act", "packRun"].includes(method)
+    const operationId = ["act", "packRun", "pageRead"].includes(method)
       ? a.operationId
       : null;
     const pauseEpoch = this.pauseEpoch;
     const requestedWhilePaused = this.paused;
     const liveRequest =
-      ["observe", "act", "packRun", "packTest"].includes(method) ||
+      ["observe", "act", "packRun", "pageRead", "packTest"].includes(method) ||
       (method === "read" && !a.observationId);
     if (operationId) {
       if ([...this.inFlight.values()].reduce((a, b) => a + b, 0) >= 64)
@@ -888,8 +903,15 @@ export class Runtime {
               installed: p.installed,
               archived: !!p.archivedAt,
             }));
-          case "packGet":
-            return this.packs.get(a.id);
+          case "packGet": {
+            const p = this.packs.get(a.id);
+            return {
+              ...p,
+              activeEffectiveRevision: p.active
+                ? hash(this.packs.effective(a.id, p.active))
+                : null,
+            };
+          }
           case "packDraft":
             return this.packs.draft(a.pack, a.expected);
           case "packImport": {
@@ -960,6 +982,8 @@ export class Runtime {
             return this.packs.restore(a.id, a.expected, a.revision);
           case "packContext":
             return this.packs.context(this.retained(a.observationId), a);
+          case "pageRead":
+            return runPageReading(this, a);
           case "packRun":
             return this.runPack(a);
         }

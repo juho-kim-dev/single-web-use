@@ -133,6 +133,7 @@ export function diffObservations(before, after) {
         "editable",
         "rect",
         "states",
+        "scroll",
         "exposure",
         "parent",
       ].filter((k) => JSON.stringify(old.get(ref)[k]) !== JSON.stringify(n[k]));
