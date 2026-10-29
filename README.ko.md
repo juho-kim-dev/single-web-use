@@ -20,6 +20,8 @@ SWU는 **PAW(Personal AI Workspace)**의 브라우저 사용 구성요소입니�
 
 Windows·Node 24.22.1에서 구문/빌드/계약·런타임·저장·HTTP·MCP 검사와 임시 별도 프로필의 headless Chrome 합성 DOM 검사를 수행했습니다. **확장 설치, 전경 Chrome 통합, 실사이트 유용성, AI 클라이언트 연결은 미검증입니다.** 스토어·npm 릴리스나 모든 사이트 지원을 주장하지 않습니다. [검증 구분](docs/validation.md).
 
+연결 실패는 이제 활성 탭·창 포커스·최소화·주소 미제공·HTTP(S) 여부를 구분해 안내합니다. [연결 진단](docs/connection-diagnostics.md)을 확인하세요. 진단 개선 자체는 실브라우저 연결 성공을 뜻하지 않습니다.
+
 ## 두 설치 단위
 
 Node 22+와 Chromium 확장 환경이 필요합니다. 현재 검사는 Windows에서 수행했으며 다른 OS·브라우저 설치는 검증하지 않았습니다.

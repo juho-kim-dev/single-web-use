@@ -1,4 +1,5 @@
 import { editDefinition, createOverlay } from "./editor.js";
+import { connectionGuidance } from "./diagnostics.js";
 const $ = (id) => document.getElementById(id);
 let observation = null,
   selected = null,
@@ -115,7 +116,7 @@ function action(id, fn) {
       await fn();
       $("status").textContent = "Done · review the result and evidence.";
     } catch (e) {
-      $("status").textContent = e.message;
+      $("status").textContent = connectionGuidance(e.message);
     } finally {
       $(id).disabled = false;
     }
@@ -132,7 +133,7 @@ const status = await send({ type: "status" });
 $("identity").textContent = "Extension ID: " + status.extensionId;
 $("status").textContent = status.connected
   ? "Connected to foreground tab"
-  : (status.lastError ?? "Not connected");
+  : connectionGuidance(status.lastError ?? "Not connected");
 action("saveToken", async () => {
   if (!/^[a-f0-9]{64}$/.test($("token").value))
     throw Error("Expected 64 hexadecimal characters");
@@ -178,7 +179,7 @@ action("read", async () => {
         report(result);
         document.querySelector("[data-tab=packs]").click();
       } catch (e) {
-        $("status").textContent = e.message;
+        $("status").textContent = connectionGuidance(e.message);
       }
     });
     $("targets").append(b);

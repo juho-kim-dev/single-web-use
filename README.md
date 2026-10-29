@@ -60,6 +60,8 @@ The final command requires an installed, tested and active example pack. [Walk t
 
 `npm pack` creates a local archive containing connector source, built extension, examples and skill. `npm install --prefix YOUR_PRIVATE_TOOLS ./ARCHIVE.tgz` installs without global changes; invoke the resulting local `swu` executable. No npm release is published. To update: stop runtime, update source/dependencies, rebuild, reload this extension, confirm its ID, restart/rebind. If the ID changes, [re-pair without deleting state](SECURITY.md).
 
+Connection refused? The popup shows a fixed code with Korean/English manual guidance. See [connection diagnostics](docs/connection-diagnostics.md); a refusal does not identify its underlying live cause until the distinct code is observed.
+
 ## MCP and usage skill
 
 Keep the same runtime running; configure a stdio server with an **absolute path**:
