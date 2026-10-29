@@ -1,5 +1,28 @@
 // Fixed guidance only: never append page URLs, titles, tokens or browser API details.
 const guidance = {
+  "runtime-update-restart-required":
+    "Connector 업데이트·명시 재시작이 필요합니다. 기존 런타임이나 잠금을 자동 변경하지 않습니다. / Update and explicitly restart the Connector; its owner and lock are left unchanged.",
+  "automatic-bind-session-changed":
+    "상태 확인 후 연결 소유자가 바뀌었습니다. 현재 상태를 확인하세요. / The runtime session changed; inspect current ownership.",
+  "automatic-bind-owner-exists":
+    "다른 연결을 자동 교체하지 않습니다. 소유자를 확인하고 직접 복구하세요. / An established owner is not replaced automatically; inspect and recover explicitly.",
+  "automatic-bind-busy":
+    "작업 중에는 자동 연결하지 않습니다. 완료 후 상태를 확인하세요. / Automatic binding is refused while work is busy.",
+  "automatic-bind-paused":
+    "일시정지 중에는 자동 연결하지 않습니다. / Automatic binding is refused while paused.",
+  "automatic-bind-fenced":
+    "입력 전달 결과를 확인해야 합니다. 자동 연결로 fence를 지우지 않습니다. / Inspect uncertain delivery; automatic binding does not clear its fence.",
+  "panel-window-required":
+    "이 패널의 창을 확인하지 못했습니다. 대상 창의 툴바에서 다시 여세요. / Open the sidebar from the intended window toolbar.",
+  "side-panel-open-failed":
+    "툴바를 직접 눌러 패널을 여세요. / Open the sidebar with a direct toolbar gesture.",
+  "explicit-disconnect-retained":
+    "직접 연결 해제한 상태입니다. 연결 버튼으로 명시적으로 연결하세요. / Explicitly connect from the panel after a manual disconnect.",
+  "runtime-unavailable":
+    "SWU 시작 아이콘으로 Connector를 켠 뒤 상태를 확인하세요. / Start the Connector with the installed SWU launcher, then inspect status.",
+  "pairing-token-required":
+    "설정에서 첫 연결 토큰을 저장하세요. / Save the local pairing token in settings first.",
+
   "tab-not-bound":
     "대상 탭에서 확장을 열고 연결하세요. / Open the extension on the intended tab and connect.",
   "connect-tab-query-failed":

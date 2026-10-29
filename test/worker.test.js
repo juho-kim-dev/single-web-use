@@ -78,7 +78,10 @@ test("worker captures session/binding across awaits; disconnect before injection
           resolve,
         ),
       );
-    assert.equal((await send({ type: "bind" })).result.connected, true);
+    assert.equal(
+      (await send({ type: "bind", windowId: 2 })).result.connected,
+      true,
+    );
     await start;
     await send({ type: "disconnect" });
     release();
@@ -177,7 +180,7 @@ test("known missing binding/focus are not-sent; failures after possible script e
             resolve,
           ),
         );
-      await send({ type: "bind" });
+      await send({ type: "bind", windowId: 2 });
       for (let i = 0; i < 100 && !replies.some((r) => r.id === "act"); i++)
         await new Promise((r) => setTimeout(r, 10));
       const receipt = replies.find((r) => r.id === "act").result;

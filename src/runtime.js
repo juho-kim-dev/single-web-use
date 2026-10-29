@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   actionSchema,
+  bindingSchema,
   apiSchemas,
   observationSchema,
   receiptSchema,
@@ -24,6 +25,7 @@ export class Runtime {
     this.pending = null;
     this.observations = new Map();
     this.queue = Promise.resolve();
+    this.workCount = 0;
     this.fenced = false;
     this.cancelled = new Set();
     this.inFlight = new Map();
@@ -63,7 +65,18 @@ export class Runtime {
     this.controlQueue = result.catch(() => {});
     return result;
   }
-  bind(binding) {
+  bind(value) {
+    const { intent, observedSession, ...binding } = bindingSchema.parse(value);
+    if (intent === "automatic") {
+      if (this.paused) throw Error("automatic-bind-paused");
+      if (this.fenced) throw Error("automatic-bind-fenced");
+      if (this.session !== observedSession)
+        throw Error("automatic-bind-session-changed");
+      if (this.pending || this.inFlight.size || this.workCount)
+        throw Error("automatic-bind-busy");
+      if (this.session || this.binding)
+        throw Error("automatic-bind-owner-exists");
+    }
     this.disconnect("browser-rebound");
     this.session = randomUUID();
     this.binding = binding;
@@ -130,7 +143,10 @@ export class Runtime {
     });
   }
   serial(fn) {
-    const p = this.queue.then(fn);
+    this.workCount++;
+    const p = this.queue.then(fn).finally(() => {
+      this.workCount--;
+    });
     this.queue = p.catch(() => {});
     return p;
   }
@@ -755,7 +771,8 @@ export class Runtime {
     if (method === "cancel") return this.cancel(a.operationId);
     if (method === "status")
       return {
-        version: "0.5.0",
+        version: "0.6.0",
+        bindProtocol: "guarded-auto-v1",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,
         session: this.session,

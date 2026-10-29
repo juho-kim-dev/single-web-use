@@ -1,12 +1,7 @@
 import http from "node:http";
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-const bindingSchema = z
-  .object({
-    tabId: z.number().int().nonnegative(),
-    windowId: z.number().int().nonnegative(),
-  })
-  .strict();
+import { bindingSchema } from "./contracts.js";
 const bridgeReply = z
   .object({
     session: z.string().uuid(),

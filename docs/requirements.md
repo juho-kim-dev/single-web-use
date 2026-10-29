@@ -88,3 +88,17 @@ The0.3 increment was reviewed and published through PR3 as main deecb7e. Public 
 R07–R13, R14/R20, R21–R24, R26/R31 and R32 gain a connected `pageRead` path (`src/page-reading.js`, runtime/contracts, collector scroll sample, MCP/CLI/popup), not a new interpretation of the saved discussions. Exact active/effective pack pins, unique untruncated scroll target, within-container selected evidence, compatibility/byte/time/step limits, parent/child idempotency and cancel/pause epochs are covered in `page-reading.test.js`; actual popup args/late-field guards are in `popup-page-reading.test.js`. Capture routes remain historical, never input authority; operation metadata has no duplicate raw-content store. Existing R30 documents remain explicit optional preservation. [Exact contract and source comparison](page-reading.md).
 
 Not delivered by this increment: native wheel/pointer/keys/query submission, all-container/full-page aggregation, PageObservation replacement/gap reconciliation, templates/fingerprint/migration/recording, renderer research or installed/live browser evidence. Unit success does not close R01/R18 live gates. Supervisor verification of a hash-matched source copy passed81/81 with0 skips, check and build; restricted MXC integration failures remain separate environment evidence. No private Yarnbox bodies/attachments enter this ledger.
+
+
+## 0.6.0 sidebar/startup candidate
+
+Existing R01/R02/R07–R10/R15/R18 gain a native Chrome sidePanel (only added permission: sidePanel), explicit toolbar clicked-tab binding, own-window manual connection, visible-only nonoverlapping status and readable current evidence. Original pack/read/document/procedure functions remain behind accessible button disclosures; raw JSON and terminal setup are secondary. New usability request: ensureRuntime/start and MCP startup reuse the configured exclusive runtime lock with bounded readiness, while only explicit start --browser asks installed ordinary Chrome to open Google home. No login startup, silent retry, profile inspection, permission widening or automatic tab-switch/restart bind. [Contracts/evidence limits](sidebar-startup.md). Local tests are mocked/network-free; actual focus cause, installed build, real reading/scroll, launcher and sidebar accessibility await supervisor verification.
+
+
+## R34 · Easier browser startup, sidebar connection and status
+
+| ID | User requirement | Implementation vs evidence |
+|---|---|---|
+| R34 | Simple explicit Chrome/runtime startup; convenient automatic connection on toolbar gesture; polished Korean-first native sidebar and useful status without replay | src/startup.js + CLI/MCP + fixed Windows launcher; sidePanel permission/action + worker own-window connection; Runtime.bind/strict bridge atomic automatic intent and observed-session refusal for paused/fenced/busy/changed/established owner; adapter-owned foreground status; visible-only polling and preserved advanced features. Source/unit and synthetic handler tests are distinct from actual OS launch, installed sidePanel/activeTab, UI and live reading/scroll, which remain unverified. Old incompatible runtime is refused with explicit update/restart-required, preserving config/token/lock. |
+
+Reviewed source publication is user-authorized; installed/live checks are gates only for those claims. They do not create a new approval prerequisite for publishing reviewed source. The0.6 candidate does not claim live results or full SWU completion.

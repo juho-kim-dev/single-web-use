@@ -8,7 +8,10 @@ SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes 
 
 This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
-## Development checkpoint · 0.5.0
+## Development checkpoint · 0.6.0 candidate
+
+
+Native Chrome sidebar and explicit startup helper are implemented as a0.6.0 candidate. After first pairing, use the packaged Windows launcher and click the toolbar on the intended web tab. The gesture opens the panel immediately and may connect only when safe/ready; paused, fenced or explicitly disconnected work is not resumed automatically. `swu mcp` ensures runtime readiness without opening a browser. [First installation, launch and guard contracts](docs/sidebar-startup.md). Supervisor verification passed100/100 tests, syntax and build, plus isolated real-process cold MCP/concurrent startup. Installed/live behavior and the popup-focus hypothesis remain unverified at this source checkpoint.
 
 Bounded current-container `pageRead` now combines pinned pack definitions, filtered visible evidence and guarded synthetic element scroll, with progress receipts, cancellation and finite budgets. Supervisor checks on a hash-matched copy passed81/81 with0 skips, syntax and build. Restricted MXC integration failures remain recorded separately. [Reading contract](docs/page-reading.md).
 
@@ -41,7 +44,7 @@ From the checkout, substitute your extension ID:
 
 ```sh
 node src/cli.js init EXTENSION_ID
-node src/cli.js serve
+node src/cli.js start
 ```
 
 Initialization creates `~/.paw-swu/connector.json` once, without printing the token. `SWU_HOME` can select a private directory outside the checkout. Open that file locally and copy **only its token** into the extension's Connect panel, then **Save token**. Never put it in chat, screenshots, commits or shared logs. On Windows, use your private user profile; POSIX file modes alone do not set a Windows ACL.
@@ -64,7 +67,7 @@ Connection refused? The popup shows a fixed code with Korean/English manual guid
 
 ## MCP and usage skill
 
-Keep the same runtime running; configure a stdio server with an **absolute path**:
+MCP startup ensures the same configured runtime is ready, without opening Chrome. Configure a stdio server with an **absolute path**:
 
 ```json
 {
@@ -114,3 +117,6 @@ A navigation procedure can now verify an exact same-origin destination and obser
 `pageRead` connects a pinned active site pack, filtered current-container reading and guarded synthetic element scroll. Observe → Bounded container reading exposes ordinary role/mode/budget controls, progress receipts and cancellation. Use `packGet.activeEffectiveRevision` with the active revision; `operation` and `cancel` retain the same operation ID. [Contract, CLI/MCP setup and source comparison](docs/page-reading.md), [synthetic pack](examples/container-pack.json), [request template](examples/page-read.json). The example pins the unchanged synthetic fixture; edited definitions need both actual hashes from packGet.
 
 현재 위치에서 제한된 횟수만 읽고 이동하며, 캡처별 출처·범위·offset 변화와 읽기 경로를 보존합니다. 전체 완독·네이티브 휠·자동 저장은 주장하지 않습니다. 원문은 기존 보관 관측에서 읽고 필요할 때만 명시 저장합니다. 감독자가 소스 해시를 대조한 별도 작업본에서 일반 동시 실행 검사81/81·구문·빌드 통과를 확인했습니다. CLI의 MXC 환경에서는 loopback EACCES와 Chrome 시작 실패가 별도로 기록돼 있습니다. 버전0.5.0은 확장 설치·실사이트 통과나 릴리스를 뜻하지 않습니다.
+
+
+For0.6 automatic connection, the runtime must advertise guarded-auto-v1. A responsive0.5/older incompatible owner returns update/restart-required; the startup helper never kills it, deletes its lock or changes the pairing token. Toolbar binding is finally authorized atomically by the runtime against the observed session, pause/fence/busy state and existing ownership. Source publication remains separate from unclaimed installed/live verification. [R34 sidebar/startup contract](docs/sidebar-startup.md).
