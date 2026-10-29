@@ -1,4 +1,4 @@
-# Browser Adapter connection diagnostics · 0.5.0
+# Browser Adapter connection diagnostics · 0.6.1
 
 A refused connection reports the first failed existing guard as a fixed code. The popup adds Korean/English manual guidance from `extension/diagnostics.js`. It does not report the full URL, title, token or browser API exception details. Multiple predicates may be false; one code is not a complete browser-state diagnosis.
 
@@ -17,4 +17,14 @@ These instructions are manual checks, not automatic focus, navigation, permissio
 
 A failed bind clears only that attempt's local binding/session. Overlapping attempts are refused; disconnect during the foreground check stops the pending attempt before bind dispatch. A transport failure can leave server acceptance uncertain: local cleanup is not proof of server rollback or cancellation. Inspect the connection result and existing runtime status through supported user workflows before an explicit retry; this patch performs no automatic recovery.
 
-The reported Google-home connection failure originally returned the conflated `bound-tab-must-be-active-in-focused-window`. That old message cannot identify which predicate failed. **The actual live cause remains unconfirmed.** A supervisor-refreshed installed build and a new explicit user connection attempt are needed to observe a distinct code; no such verification was performed by this worker. Source metadata stays0.5.0; no new permission, browser support or live-success claim is added.
+Historical 0.5 checkpoint: the reported Google-home connection failure originally returned the conflated `bound-tab-must-be-active-in-focused-window`. That old message cannot identify which predicate failed. **The actual live cause remains unconfirmed.** A supervisor-refreshed installed build and a new explicit user connection attempt are needed to observe a distinct code; no such verification was performed by this worker. Source metadata stays0.5.0; no new permission, browser support or live-success claim is added.
+
+## 0.6.1 lifecycle diagnostics
+
+`bound-tab-not-found` recognizes only Chrome's fixed no-tab-with-id error; `bound-tab-missing` means no tab result. These retire the captured local owner. Other failures return `bound-tab-query-failed` without inferring closure. Removal/replacement events report `bound-tab-removed`/`bound-tab-replaced`; unrelated tabs have no effect. Codes contain no browser exception, URL, title or token.
+
+The shared disconnect path clears local session/binding/document references immediately and stops the old poll loop. `/bridge/disconnect-owned` strictly requires nullable UUID `expectedSession`; Runtime.disconnect rejects a changed owner. A bind response arriving after target loss is cleaned using its returned session only. Failed cleanup reports `binding-cleanup-unconfirmed`: local status is disconnected; remote ownership may require explicit recovery. Manual disconnect alone persists the manual-disconnect flag. No automatic new tab selection/bind/retry occurs. Leased act loss remains unknown/fenced, never proof of no input.
+
+Historical descriptions above refer to their source checkpoints. Later supervisor live evidence established sidebar opening and bounded Google observe/read only; subsequent unavailable-tab cause remains unconfirmed, and scrolling remains unverified.
+
+Compatibility boundary: the new owned route is intentionally distinct from the old0.6 unconditional `/bridge/disconnect`. Unsupported cleanup is reported as unconfirmed; no fallback is sent. When a command detects missing target before injection, its known refusal is delivered before cleanup. A failed/lost reply remains unknown/fenced. Event-driven target loss during possible input remains conservative.

@@ -59,7 +59,7 @@ async function main() {
       });
       server.listen(c.port, "127.0.0.1", () =>
         console.error(
-          `SWU 0.6.0 listening on 127.0.0.1:${c.port}; no browser bound yet.`,
+          `SWU 0.6.1 listening on 127.0.0.1:${c.port}; no browser bound yet.`,
         ),
       );
       for (const signal of ["SIGINT", "SIGTERM"])
@@ -105,7 +105,7 @@ async function main() {
     return;
   }
   console.log(
-    "SWU 0.6.0\n  swu init EXTENSION_ID\n  swu serve\n  swu start [--browser]\n  swu mcp\n  swu status | observe | packs\n  swu call METHOD [request.json]\nFiltered reading: swu call read examples/read-links.json\nPrivate data: SWU_HOME or ~/.paw-swu. Browser input is synthetic.",
+    "SWU 0.6.1\n  swu init EXTENSION_ID\n  swu serve\n  swu start [--browser]\n  swu mcp\n  swu status | observe | packs\n  swu call METHOD [request.json]\nFiltered reading: swu call read examples/read-links.json\nPrivate data: SWU_HOME or ~/.paw-swu. Browser input is synthetic.",
   );
 }
 main().catch((e) => {

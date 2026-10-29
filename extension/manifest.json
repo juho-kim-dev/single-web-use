@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PAW SWU \u2014 Open Browser Adapter",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "minimum_chrome_version": "120",
   "description": "Explicitly bind your foreground tab for bounded observation and guarded synthetic input.",
   "permissions": ["activeTab", "scripting", "storage", "sidePanel"],
