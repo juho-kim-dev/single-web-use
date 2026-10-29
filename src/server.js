@@ -100,8 +100,14 @@ export function createServer(runtime, config) {
             result = runtime.reply(r.session, r.id, r.result);
             break;
           }
-          case "/bridge/disconnect":
-            runtime.disconnect();
+          case "/bridge/disconnect-owned":
+            runtime.disconnect(
+              "browser-disconnected",
+              z
+                .object({ expectedSession: z.string().uuid().nullable() })
+                .strict()
+                .parse(data).expectedSession,
+            );
             result = { disconnected: true };
             break;
           default:

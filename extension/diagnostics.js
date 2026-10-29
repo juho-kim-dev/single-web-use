@@ -29,6 +29,20 @@ const guidance = {
     "현재 탭을 확인하지 못했습니다. 대상 창에서 확장을 다시 열어 확인하세요. / Could not inspect the current tab; reopen the extension in the intended window.",
   "connect-tab-not-found":
     "현재 탭 정보를 찾지 못했습니다. 대상 탭에서 확장을 다시 여세요. / Current tab details are unavailable; reopen the extension on the intended tab.",
+  "bound-tab-not-found":
+    "Chrome이 대상 탭 없음을 확인했습니다. 직접 다시 연결하세요. / Chrome reports no such tab; reconnect explicitly.",
+  "bound-tab-missing":
+    "대상 탭 정보가 없습니다. 직접 연결하세요. / Target details are missing; connect explicitly.",
+  "bound-tab-query-failed":
+    "탭 조회 실패입니다. 상태를 확인하세요. / Tab inspection failed; inspect status.",
+  "bound-tab-removed":
+    "연결한 탭이 닫혔습니다. 직접 연결하세요. / The bound tab closed; connect explicitly.",
+  "bound-tab-replaced":
+    "연결한 탭이 교체되었습니다. 직접 연결하세요. / The bound tab was replaced; reconnect explicitly.",
+  "binding-cleanup-unconfirmed":
+    "로컬 연결은 해제됐으나 원격 정리를 확인하지 못했습니다. 직접 복구하세요. / Local ownership ended; remote cleanup is unconfirmed. Recover explicitly.",
+  "disconnect-session-changed":
+    "새 연결 소유자를 보존했습니다. / A newer session was preserved.",
   "bound-tab-unavailable":
     "대상 탭을 확인할 수 없습니다. 탭이 열려 있는지 확인하세요. / The intended tab is unavailable; check that it is still open.",
   "bound-window-unavailable":

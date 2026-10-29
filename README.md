@@ -8,10 +8,12 @@ SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes 
 
 This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
-## Development checkpoint · 0.6.0 candidate
+## Development checkpoint · 0.6.1 patch
+
+The0.6.1 supervisor full suite passed113/113 with0 failures/0 skips, syntax/build and isolated real-process cold/concurrent MCP startup. This patch retires missing/replaced tab ownership safely; installed verification of that repair is still pending.
 
 
-Native Chrome sidebar and explicit startup helper are implemented as a0.6.0 candidate. After first pairing, use the packaged Windows launcher and click the toolbar on the intended web tab. The gesture opens the panel immediately and may connect only when safe/ready; paused, fenced or explicitly disconnected work is not resumed automatically. `swu mcp` ensures runtime readiness without opening a browser. [First installation, launch and guard contracts](docs/sidebar-startup.md). Supervisor verification passed100/100 tests, syntax and build, plus isolated real-process cold MCP/concurrent startup. Installed/live behavior and the popup-focus hypothesis remain unverified at this source checkpoint.
+Native Chrome sidebar and explicit startup helper are implemented as a0.6.0 candidate. After first pairing, use the packaged Windows launcher and click the toolbar on the intended web tab. The gesture opens the panel immediately and may connect only when safe/ready; paused, fenced or explicitly disconnected work is not resumed automatically. `swu mcp` ensures runtime readiness without opening a browser. [First installation, launch and guard contracts](docs/sidebar-startup.md). Supervisor verification passed100/100 tests, syntax and build, plus isolated real-process cold MCP/concurrent startup. Installed/live evidence now includes the bounded observe/read described below; the popup-focus hypothesis and scrolling remain unverified.
 
 Bounded current-container `pageRead` now combines pinned pack definitions, filtered visible evidence and guarded synthetic element scroll, with progress receipts, cancellation and finite budgets. Supervisor checks on a hash-matched copy passed81/81 with0 skips, syntax and build. Restricted MXC integration failures remain recorded separately. [Reading contract](docs/page-reading.md).
 
@@ -21,7 +23,7 @@ Implemented: authenticated extension/connector transport, bounded viewport DOM o
 
 This increment adds filtered text/link/state reading, bounded many-item roles with same-node title/link evidence, deterministic retained-observation pages, capability discovery, observation read/history/diff, explicit private saved reading after restart, ordinary author fields and deactivation. [Source-backed legacy parity and concrete gaps](docs/legacy-parity.md) distinguish these implementations from native input and render research.
 
-Locally checked on Windows with Node 24.22.1: syntax, build, contract/runtime/storage/HTTP/MCP tests, and a synthetic DOM self-check in installed headless Chrome with an isolated temporary profile. **Extension installation, foreground Chrome integration, real-site usefulness and AI-client interoperability remain unverified.** This is a reviewable development preview, not a browser-store/npm release or an all-sites claim. See [validation](docs/validation.md).
+Locally checked on Windows with Node 24.22.1: syntax, build, contract/runtime/storage/HTTP/MCP tests, and a synthetic DOM self-check in installed headless Chrome with an isolated temporary profile. **Native sidebar opening and bounded Google-home observe/read were verified with0.6.0. The0.6.1 installed lifecycle repair, live scrolling and broader site usefulness remain unverified.** This is a reviewable development preview, not a browser-store/npm release or an all-sites claim. See [validation](docs/validation.md).
 
 ## Install the two units
 
@@ -120,3 +122,9 @@ A navigation procedure can now verify an exact same-origin destination and obser
 
 
 For0.6 automatic connection, the runtime must advertise guarded-auto-v1. A responsive0.5/older incompatible owner returns update/restart-required; the startup helper never kills it, deletes its lock or changes the pairing token. Toolbar binding is finally authorized atomically by the runtime against the observed session, pause/fence/busy state and existing ownership. Source publication remains separate from unclaimed installed/live verification. [R34 sidebar/startup contract](docs/sidebar-startup.md).
+
+## 0.6.1 · Target lifecycle / 대상 탭 수명
+
+Confirmed bound-tab removal/replacement retires adapter ownership and requests session-guarded runtime disconnection. No replacement tab is selected or bound automatically. Known missing-target errors are distinct from transient Chrome query failures; remote cleanup failure remains explicit. Use matched Connector/Adapter builds. Pause and uncertain-input fences remain intact.
+
+Supervisor-reported live evidence: native sidebar opened; Google-home observe returned35 nodes with846 visited and no truncation, and retained filtered reading returned47 items over four bounded pages. No input was dispatched. Later fresh observations returned the old `bound-tab-unavailable` while heartbeat status stayed connected. The cause is unknown. Scroll had no candidate and is not live-verified. This worker performed no installed/live trial.

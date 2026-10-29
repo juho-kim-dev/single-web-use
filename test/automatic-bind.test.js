@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
+import { fixture, observation, pending } from "./helpers.js";
 import { Runtime } from "../src/runtime.js";
 import { createServer } from "../src/server.js";
 const config = {
@@ -9,11 +10,11 @@ const config = {
   token: "a".repeat(64),
 };
 const runtime = () => new Runtime({ data: { packs: {}, operations: {} } });
-function post(server, body) {
+function post(server, body, route = "/bridge/bind") {
   return new Promise((resolve) => {
     const req = Readable.from([Buffer.from(JSON.stringify(body))]);
     req.method = "POST";
-    req.url = "/bridge/bind";
+    req.url = route;
     req.headers = {
       host: "127.0.0.1:47831",
       origin: "chrome-extension://" + config.extensionId,
@@ -134,4 +135,102 @@ test("automatic binds preserve established owners, reject malformed contracts, a
   assert.equal(manual.status, 200);
   assert.notEqual(r.session, owner);
   assert.equal(r.fenced, false);
+});
+
+test("disconnect requires exact session, preserves newer owner and fences leased input", async () => {
+  const r = runtime(),
+    server = createServer(r, config);
+  const old = r.bind({ tabId: 1, windowId: 2 }).session;
+  assert.equal(
+    (await post(server, { expectedSession: old }, "/bridge/disconnect")).error,
+    "unknown-route",
+  );
+  assert.equal(r.session, old);
+  const newer = r.bind({ tabId: 3, windowId: 2 }).session;
+  assert.equal(
+    (await post(server, {}, "/bridge/disconnect-owned")).error,
+    "invalid-request-schema",
+  );
+  assert.equal(
+    (await post(server, { expectedSession: old }, "/bridge/disconnect-owned"))
+      .error,
+    "disconnect-session-changed",
+  );
+  assert.equal(r.session, newer);
+  let rejected = false;
+  r.pending = {
+    leased: true,
+    command: { kind: "act" },
+    reject() {
+      rejected = true;
+    },
+  };
+  r.paused = true;
+  assert.equal(
+    (await post(server, { expectedSession: newer }, "/bridge/disconnect-owned"))
+      .result.disconnected,
+    true,
+  );
+  assert.equal(rejected, true);
+  assert.equal(r.session, null);
+  assert.equal(r.fenced, true);
+  assert.equal(r.paused, true);
+});
+
+test("target loss during leased input persists unknown receipt and blocks automatic replay", async (t) => {
+  const { runtime: r, session, store } = await fixture(t);
+  const o = r.retain(observation({ session }));
+  const task = r.call("act", {
+    operationId: "lost-target",
+    observationId: o.id,
+    target: "n1",
+    kind: "fill",
+    text: "test",
+    expectedValue: "",
+    intent: "edit-field",
+  });
+  await pending(r);
+  r.disconnect("browser-disconnected", session);
+  const receipt = await task;
+  assert.equal(receipt.delivery, "unknown");
+  assert.equal(
+    store.data.operations["lost-target"].receipt.delivery,
+    "unknown",
+  );
+  assert.equal(r.fenced, true);
+  assert.throws(
+    () =>
+      r.bind({
+        tabId: 3,
+        windowId: 2,
+        intent: "automatic",
+        observedSession: null,
+      }),
+    /automatic-bind-fenced/,
+  );
+});
+
+test("disconnect after reply before retaining act-after still fences unknown delivery", async (t) => {
+  const { runtime: r, session } = await fixture(t);
+  const o = r.retain(observation({ session }));
+  const task = r.call("act", {
+    operationId: "lost-after-reply",
+    observationId: o.id,
+    target: "n1",
+    kind: "fill",
+    text: "test",
+    expectedValue: "",
+    intent: "edit-field",
+  });
+  const command = await pending(r);
+  r.reply(session, command.id, {
+    accepted: true,
+    delivery: "synthetic-dispatched",
+    outcome: "unknown",
+    reason: "dispatched",
+    after: observation({ session }),
+  });
+  r.disconnect("browser-disconnected", session);
+  assert.equal((await task).delivery, "unknown");
+  assert.equal(r.fenced, true);
 });

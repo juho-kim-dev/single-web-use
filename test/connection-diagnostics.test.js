@@ -11,8 +11,8 @@ test("worker foreground diagnostics distinguish refusals without bind traffic/sc
   const cases = [
     ["query-failure", "connect-tab-query-failed"],
     ["no-tab", "connect-tab-not-found"],
-    ["missing-get", "bound-tab-unavailable"],
-    ["get-failure", "bound-tab-unavailable"],
+    ["missing-get", "bound-tab-missing"],
+    ["get-failure", "bound-tab-query-failed"],
     ["missing-window", "bound-window-unavailable"],
     ["window-failure", "bound-window-unavailable"],
     ["inactive", "bound-tab-inactive"],
@@ -213,7 +213,7 @@ for (const phase of ["query", "foreground"]) {
     await send({ type: "disconnect" });
     release();
     assert.equal((await connecting).error, "binding-changed-during-connect");
-    assert.deepEqual(routes, ["/bridge/disconnect"]);
+    assert.deepEqual(routes, []);
     assert.equal((await send({ type: "status" })).result.connected, false);
   });
 }

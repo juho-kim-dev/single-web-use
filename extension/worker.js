@@ -25,10 +25,14 @@ async function request(route, body) {
 }
 async function foreground(bound) {
   if (!bound) throw Error("tab-not-bound");
-  const tab = await chrome.tabs.get(bound.tabId).catch(() => {
-    throw Error("bound-tab-unavailable");
+  const tab = await chrome.tabs.get(bound.tabId).catch((e) => {
+    throw Error(
+      /^No tab with id: \d+\.?$/.test(e?.message ?? "")
+        ? "bound-tab-not-found"
+        : "bound-tab-query-failed",
+    );
   });
-  if (!tab) throw Error("bound-tab-unavailable");
+  if (!tab) throw Error("bound-tab-missing");
   const window = await chrome.windows.get(bound.windowId).catch(() => {
     throw Error("bound-window-unavailable");
   });
@@ -42,12 +46,12 @@ async function foreground(bound) {
   if (!/^https?:/.test(tab.url)) throw Error("bound-tab-url-not-http");
   return tab;
 }
-async function execute(command) {
+async function execute(command, retire) {
   let injected = false;
+  const bound = binding,
+    ownedSession = session;
   try {
-    const bound = binding,
-      ownedSession = session,
-      ownedEpoch = epoch;
+    const ownedEpoch = epoch;
     const guard = () => {
       if (
         !bound ||
@@ -101,6 +105,11 @@ async function execute(command) {
     }
     return result;
   } catch (e) {
+    if (
+      ["bound-tab-not-found", "bound-tab-missing"].includes(e.message) &&
+      binding === bound
+    )
+      retire(e.message);
     if (command.kind === "act")
       return {
         accepted: true,
@@ -164,8 +173,39 @@ const invalidate = () => {
 };
 chrome.tabs.onActivated.addListener(invalidate);
 chrome.windows.onFocusChanged.addListener(invalidate);
+async function disconnectOwned(
+  manual = false,
+  reason = null,
+  expectedSession = session,
+) {
+  invalidate();
+  session = null;
+  binding = null;
+  running = false;
+  const ticket = epoch;
+  await chrome.storage.session.set({
+    userDisconnected: manual,
+    lastError: reason,
+  });
+  if (!expectedSession) return { disconnected: true };
+  try {
+    await request("/bridge/disconnect-owned", { expectedSession });
+    return { disconnected: true };
+  } catch (e) {
+    if (ticket === epoch)
+      await chrome.storage.session.set({
+        lastError: "binding-cleanup-unconfirmed",
+      });
+    return { disconnected: true, cleanupConfirmed: false };
+  }
+}
 chrome.tabs.onRemoved.addListener((tabId) => {
-  if (tabId === binding?.tabId) invalidate();
+  if (tabId === binding?.tabId)
+    void disconnectOwned(false, "bound-tab-removed");
+});
+chrome.tabs.onReplaced?.addListener((addedTabId, removedTabId) => {
+  if (removedTabId === binding?.tabId)
+    void disconnectOwned(false, "bound-tab-replaced");
 });
 chrome.tabs.onUpdated.addListener((tabId, change) => {
   if (tabId === binding?.tabId && (change.url || change.status === "loading"))
@@ -173,15 +213,19 @@ chrome.tabs.onUpdated.addListener((tabId, change) => {
 });
 async function loop() {
   if (running) return;
-  running = true;
+  const loopSession = session;
+  running = loopSession;
   try {
-    while (session) {
+    while (session === loopSession) {
       const activeSession = session,
         { command } = await request("/bridge/poll", { session: activeSession });
+      if (session !== loopSession) break;
       if (command) {
-        let result;
+        let result, retireReason;
         try {
-          result = await execute(command);
+          result = await execute(command, (reason) => {
+            retireReason = reason;
+          });
         } catch (e) {
           result =
             command.kind === "act"
@@ -198,15 +242,16 @@ async function loop() {
           id: command.id,
           result,
         });
+        if (retireReason && session === activeSession)
+          await disconnectOwned(false, retireReason, activeSession);
       }
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   } catch (e) {
-    session = null;
-    binding = null;
-    await chrome.storage.session.set({ lastError: e.message });
+    if (session === loopSession)
+      await disconnectOwned(false, e.message, loopSession);
   } finally {
-    running = false;
+    if (running === loopSession) running = false;
   }
 }
 async function connectTab(tab, automatic = false, ownsAttempt = false) {
@@ -266,8 +311,16 @@ async function connectTab(tab, automatic = false, ownsAttempt = false) {
     });
     if (typeof result?.session !== "string" || !result.session)
       throw Error("binding-unconfirmed");
-    if (binding !== bound || ticket !== epoch)
+    if (binding !== bound || ticket !== epoch) {
+      await request("/bridge/disconnect-owned", {
+        expectedSession: result.session,
+      }).catch(() =>
+        chrome.storage.session.set({
+          lastError: "binding-cleanup-unconfirmed",
+        }),
+      );
       throw Error("binding-changed-during-connect");
+    }
     session = result.session;
     documents.clear();
     await chrome.storage.session.set({
@@ -368,7 +421,17 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
           try {
             await foreground(runtime.binding);
             foregroundReady = true;
-          } catch {}
+          } catch (e) {
+            if (
+              ["bound-tab-not-found", "bound-tab-missing"].includes(
+                e.message,
+              ) &&
+              session === ownedSession &&
+              binding === ownedBinding
+            )
+              await disconnectOwned(false, e.message, ownedSession);
+            else await chrome.storage.session.set({ lastError: e.message });
+          }
         }
         const flags = await chrome.storage.session.get([
           "userDisconnected",
@@ -394,12 +457,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       }
     }
     if (message.type === "disconnect") {
-      invalidate();
-      session = null;
-      binding = null;
-      await chrome.storage.session.set({ userDisconnected: true });
-      await request("/bridge/disconnect", {});
-      return { disconnected: true };
+      return disconnectOwned(true);
     }
     if (message.type === "api")
       return request("/api", { method: message.method, args: message.args });

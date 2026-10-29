@@ -84,7 +84,11 @@ export class Runtime {
     this.fenced = false;
     return { session: this.session };
   }
-  disconnect(reason = "browser-disconnected") {
+  disconnect(reason = "browser-disconnected", expectedSession = this.session) {
+    if (expectedSession !== this.session)
+      throw Error("disconnect-session-changed");
+    if (this.pending?.leased && this.pending.command.kind === "act")
+      this.fenced = true;
     if (this.pending) this.pending.reject(Error(reason));
     this.pending = null;
     this.session = null;
@@ -503,7 +507,10 @@ export class Runtime {
         reason: "delivery-unconfirmed-no-retry",
       };
     }
-    if (receipt.delivery === "unknown" && session === this.session)
+    if (
+      receipt.delivery === "unknown" &&
+      (session === this.session || !this.session)
+    )
       this.fenced = true;
     try {
       await this.store.change((s) => {
@@ -771,7 +778,7 @@ export class Runtime {
     if (method === "cancel") return this.cancel(a.operationId);
     if (method === "status")
       return {
-        version: "0.6.0",
+        version: "0.6.1",
         bindProtocol: "guarded-auto-v1",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,

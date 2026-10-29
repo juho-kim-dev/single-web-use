@@ -342,7 +342,7 @@ test("panel status requires matching local ownership, current foreground, and cl
   assert.equal(state.foregroundReady, false);
   delayFlags = false;
   releasePoll();
-  await waitFor(() => stored.lastError === "fixture-stop");
+  await send({ type: "status" });
   await import("../extension/worker.js?panel-owned-status-restarted");
   state = (await send({ type: "panelStatus", windowId: 7 })).result;
   assert.equal(state.adapterOwned, false);
