@@ -115,14 +115,17 @@ test("worker foreground diagnostics distinguish refusals without bind traffic/sc
           r,
         ),
       );
-    const refused = await send({ type: "bind" });
+    const refused = await send({ type: "bind", windowId: 2 });
     assert.equal(refused.error, expected);
     assert.equal(JSON.stringify(refused).includes("PRIVATE_SENTINEL"), false);
     assert.equal(network.length, initial === "bind-rejected" ? 1 : 0);
     assert.equal(scripts, 0);
     assert.equal((await send({ type: "status" })).result.connected, false);
     mode = "valid";
-    assert.equal((await send({ type: "bind" })).result.connected, true);
+    assert.equal(
+      (await send({ type: "bind", windowId: 2 })).result.connected,
+      true,
+    );
     assert.equal(
       network.filter((n) => n.route === "/bridge/bind").length,
       initial === "bind-rejected" ? 2 : 1,
@@ -201,10 +204,10 @@ for (const phase of ["query", "foreground"]) {
           r,
         ),
       );
-    const connecting = send({ type: "bind" });
+    const connecting = send({ type: "bind", windowId: 2 });
     await ready;
     assert.equal(
-      (await send({ type: "bind" })).error,
+      (await send({ type: "bind", windowId: 2 })).error,
       "disconnect-before-rebind",
     );
     await send({ type: "disconnect" });

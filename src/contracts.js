@@ -409,3 +409,21 @@ export const apiSchemas = {
     .strict(),
   packUpdatePreview: z.object({ id, pack: packSchema }).strict(),
 };
+
+// Manual binds keep the existing explicit recovery contract; automatic binds compare runtime ownership.
+export const bindingSchema = z.union([
+  z
+    .object({
+      tabId: z.number().int().nonnegative(),
+      windowId: z.number().int().nonnegative(),
+    })
+    .strict(),
+  z
+    .object({
+      tabId: z.number().int().nonnegative(),
+      windowId: z.number().int().nonnegative(),
+      intent: z.literal("automatic"),
+      observedSession: z.string().uuid().nullable(),
+    })
+    .strict(),
+]);

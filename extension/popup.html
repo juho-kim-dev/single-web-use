@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -9,328 +9,384 @@
   <body>
     <header>
       <span class="eyebrow">PERSONAL AI WORKSPACE</span>
-      <h1>Your browser, with evidence.</h1>
-      <p>
-        Connect this foreground tab. Read the current viewport and build
-        reusable site abilities.
-      </p>
+      <h1>브라우저를 함께 쓰는 공간</h1>
+      <p id="connectionState" role="status">연결 상태 확인 중</p>
+      <p id="connectionHelp">설정에서 첫 연결을 준비하세요.</p>
+      <p id="status" role="status" aria-live="polite"></p>
     </header>
-    <nav aria-label="Workspace">
-      <button data-tab="connect" aria-selected="true">Connect</button
-      ><button data-tab="observe">Observe</button
-      ><button data-tab="packs">Site packs</button>
+    <nav aria-label="작업 공간">
+      <button data-tab="observe" aria-pressed="true">현재 페이지</button
+      ><button data-tab="packs">사이트 기능</button
+      ><button data-tab="connect">설정</button>
     </nav>
     <main>
-      <section id="connect">
-        <h2>Pair your connector</h2>
+      <section id="connect" hidden>
+        <h2>처음 연결하기</h2>
         <p id="identity"></p>
         <p>
-          Run <code>swu init EXTENSION_ID</code>, then <code>swu serve</code>.
-          Copy the token from your private connector.json locally.
+          설치한 SWU 시작 아이콘으로 Connector를 켜세요. 첫 설치에서만 비공개
+          로컬 토큰을 저장합니다.
         </p>
-        <label for="token">Local pairing token</label
+        <button
+          type="button"
+          data-disclosure="setupAdvanced"
+          aria-expanded="false"
+          aria-controls="setupAdvanced"
+        >
+          고급 설치 안내
+        </button>
+        <div id="setupAdvanced" hidden>
+          <p>입력은 합성이며 전체 완독·설치본 동작은 별도 검증이 필요합니다.</p>
+          <p>
+            swu init EXTENSION_ID → swu start. 개인 connector.json의 토큰만
+            로컬에서 복사하세요. 채팅·로그에 공유하지 마세요.
+          </p>
+        </div>
+        <label for="token">로컬 연결 토큰</label
         ><input
           id="token"
           type="password"
           autocomplete="off"
           spellcheck="false"
-        /><button id="saveToken">Save token</button>
+        /><button id="saveToken">토큰 저장</button>
         <div class="actions">
-          <button id="bind" class="primary">Connect current tab</button
-          ><button id="disconnect">Disconnect</button>
-          <button id="pauseRuntime">Pause all browser work</button>
-          <button id="resumeRuntime">Resume · require fresh observation</button>
+          <button id="bind" class="primary">이 창의 활성 탭 연결</button
+          ><button id="disconnect">연결 해제</button>
+          <button id="pauseRuntime">전체 일시정지</button>
+          <button id="resumeRuntime">재개 · 새 관측 필요</button>
         </div>
         <p id="controlStatus" role="status">
-          Read connector control status before input.
+          입력 전 Connector의 제어 상태를 확인하세요.
         </p>
         <p class="note">
-          Only the active tab in a focused window can be used. Input is
-          synthetic. Credentials and sensitive transactions are outside
-          supported primitives.
+          전경 창의 활성 HTTP(S) 탭만 사용합니다. 입력은 합성이며 자격
+          증명·민감한 거래는 지원하지 않습니다.
         </p>
       </section>
-      <section id="observe" hidden>
+      <section id="observe">
         <div class="heading">
-          <h2>Current viewport</h2>
-          <button id="read" class="primary">Read now</button>
+          <h2>현재 보이는 페이지</h2>
+          <button id="read" class="primary">현재 화면 읽기</button>
         </div>
         <p>
-          Choose a target to propose a read-only pack. Page content is
-          untrusted.
+          현재 보이는 내용을 읽습니다. 페이지 안의 문장은 명령이나 권한이
+          아닙니다.
         </p>
-        <label for="readKinds">Initial reading filter</label
-        ><select id="readKinds">
-          <option value="text,link,state">Text, links and state</option>
-          <option value="text">Text only</option>
-          <option value="link">Links with observed titles</option>
-          <option value="state">Control state</option>
-        </select>
-        <label for="readPack">Active pack ID (optional)</label
-        ><input
-          id="readPack"
-          placeholder="Leave blank for viewport candidates"
-        />
-        <div class="actions">
-          <button id="filteredRead">Read filtered now</button
-          ><button id="nextPage">Next page · same observation</button
-          ><button id="discover">Discover capabilities</button>
-        </div>
-        <h2>Bounded container reading</h2>
-        <p>
-          Uses an active site pack and synthetic element scroll. No automatic
-          saving or whole-page claim.
-        </p>
-        <label for="pageReadPack">Active pack ID</label
-        ><input id="pageReadPack" />
-        <label for="pageReadRole">Unique observed scroll role</label
-        ><input id="pageReadRole" />
-        <label for="pageReadRoles">Reading role IDs · comma separated</label
-        ><input id="pageReadRoles" />
-        <label for="pageReadSteps">Maximum additional scrolls · 0–8</label
-        ><input id="pageReadSteps" type="number" min="0" max="8" value="2" />
-        <label for="pageReadMs">Elapsed budget · 100–30000 ms</label
-        ><input
-          id="pageReadMs"
-          type="number"
-          min="100"
-          max="30000"
-          value="10000"
-        />
-        <label for="pageReadBytes">Accepted reading bytes · 1024–131072</label
-        ><input
-          id="pageReadBytes"
-          type="number"
-          min="1024"
-          max="131072"
-          value="65536"
-        />
-        <label for="pageReadDy">Synthetic downward delta · 1–1000</label
-        ><input id="pageReadDy" type="number" min="1" max="1000" value="300" />
-        <label for="pageReadOperation"
-          >Operation ID · keep for retry/status</label
-        ><input id="pageReadOperation" />
-        <div class="actions">
-          <button id="pageReadNew">New reading intent</button
-          ><button id="pageReadRun">Read container once</button
-          ><button id="pageReadProgress">Inspect progress / receipt</button
-          ><button id="pageReadCancel">Request stop</button>
-        </div>
-        <p>
-          Use each capture's pinned reading route for content. Unknown input is
-          never retried; cancellation cannot roll back delivery.
-        </p>
-        <label for="saveName">Private saved content name</label
-        ><input id="saveName" value="Selected reading" />
-        <div class="actions">
-          <button id="preserve">Save this reading page privately</button
-          ><button id="savedList">List saved content</button>
-        </div>
-        <label for="savedId">Saved content ID</label
-        ><input id="savedId" /><button id="savedRead">
-          Reload saved content
+        <p id="currentPage">대상 탭 연결을 확인하세요</p>
+        <!-- prettier-ignore -->
+        <div id="readingContent" class="reading" aria-live="polite">화면 읽기를 누르면 실제로 관측된 내용이 여기에 표시됩니다.</div>
+        <button
+          type="button"
+          data-disclosure="readAdvanced"
+          aria-expanded="false"
+          aria-controls="readAdvanced"
+        >
+          고급 읽기·저장·근거
         </button>
-        <h2>Accumulated reading documents</h2>
-        <p>
-          Combine explicitly saved sections from the same page and document.
-          Overlap stays visible; this is not a complete page capture.
-        </p>
-        <label for="documentName">Document name</label
-        ><input id="documentName" value="My reading" />
-        <button id="documentCreate">Create from saved reading</button>
-        <label for="documentSelect">Private documents</label
-        ><select id="documentSelect">
-          <option value="">Select a document</option>
-        </select>
-        <div class="actions">
-          <button id="documentList">Refresh documents</button
-          ><button id="documentRead">Read selected document</button
-          ><button id="documentAppend">Append saved reading</button
-          ><button id="documentExport">Export selected document bundle</button>
+        <div id="readAdvanced" hidden>
+          <label for="readKinds">Initial reading filter</label
+          ><select id="readKinds">
+            <option value="text,link,state">Text, links and state</option>
+            <option value="text">Text only</option>
+            <option value="link">Links with observed titles</option>
+            <option value="state">Control state</option>
+          </select>
+          <label for="readPack">Active pack ID (optional)</label
+          ><input
+            id="readPack"
+            placeholder="Leave blank for viewport candidates"
+          />
+          <div class="actions">
+            <button id="filteredRead">Read filtered now</button
+            ><button id="nextPage">Next page · same observation</button
+            ><button id="discover">Discover capabilities</button>
+          </div>
+          <h2>Bounded container reading</h2>
+          <p>
+            Uses an active site pack and synthetic element scroll. No automatic
+            saving or whole-page claim.
+          </p>
+          <label for="pageReadPack">Active pack ID</label
+          ><input id="pageReadPack" />
+          <label for="pageReadRole">Unique observed scroll role</label
+          ><input id="pageReadRole" />
+          <label for="pageReadRoles">Reading role IDs · comma separated</label
+          ><input id="pageReadRoles" />
+          <label for="pageReadSteps">Maximum additional scrolls · 0–8</label
+          ><input id="pageReadSteps" type="number" min="0" max="8" value="2" />
+          <label for="pageReadMs">Elapsed budget · 100–30000 ms</label
+          ><input
+            id="pageReadMs"
+            type="number"
+            min="100"
+            max="30000"
+            value="10000"
+          />
+          <label for="pageReadBytes">Accepted reading bytes · 1024–131072</label
+          ><input
+            id="pageReadBytes"
+            type="number"
+            min="1024"
+            max="131072"
+            value="65536"
+          />
+          <label for="pageReadDy">Synthetic downward delta · 1–1000</label
+          ><input
+            id="pageReadDy"
+            type="number"
+            min="1"
+            max="1000"
+            value="300"
+          />
+          <label for="pageReadOperation"
+            >Operation ID · keep for retry/status</label
+          ><input id="pageReadOperation" />
+          <div class="actions">
+            <button id="pageReadNew">New reading intent</button
+            ><button id="pageReadRun">Read container once</button
+            ><button id="pageReadProgress">Inspect progress / receipt</button
+            ><button id="pageReadCancel">Request stop</button>
+          </div>
+          <p>
+            Use each capture's pinned reading route for content. Unknown input
+            is never retried; cancellation cannot roll back delivery.
+          </p>
+          <label for="saveName">Private saved content name</label
+          ><input id="saveName" value="Selected reading" />
+          <div class="actions">
+            <button id="preserve">Save this reading page privately</button
+            ><button id="savedList">List saved content</button>
+          </div>
+          <label for="savedId">Saved content ID</label
+          ><input id="savedId" /><button id="savedRead">
+            Reload saved content
+          </button>
+          <h2>Accumulated reading documents</h2>
+          <p>
+            Combine explicitly saved sections from the same page and document.
+            Overlap stays visible; this is not a complete page capture.
+          </p>
+          <label for="documentName">Document name</label
+          ><input id="documentName" value="My reading" />
+          <button id="documentCreate">Create from saved reading</button>
+          <label for="documentSelect">Private documents</label
+          ><select id="documentSelect">
+            <option value="">Select a document</option>
+          </select>
+          <div class="actions">
+            <button id="documentList">새로 고침 documents</button
+            ><button id="documentRead">Read selected document</button
+            ><button id="documentAppend">Append saved reading</button
+            ><button id="documentExport">
+              Export selected document bundle
+            </button>
+          </div>
+          <div class="actions">
+            <button id="history">Observation history</button
+            ><button id="diff">Compare latest compatible observations</button>
+          </div>
+          <div id="targets"></div>
+          <pre
+            id="observation"
+            tabindex="0"
+            aria-label="Observation evidence"
+          ></pre>
         </div>
-        <div class="actions">
-          <button id="history">Observation history</button
-          ><button id="diff">Compare latest compatible observations</button>
-        </div>
-        <div id="targets"></div>
-        <pre
-          id="observation"
-          tabindex="0"
-          aria-label="Observation evidence"
-        ></pre>
       </section>
       <section id="packs" hidden>
         <div class="heading">
-          <h2>Site abilities</h2>
-          <button id="refresh">Refresh</button>
+          <h2>사이트 기능</h2>
+          <button id="refresh">새로 고침</button>
         </div>
         <label for="packList">Saved packs</label
         ><select id="packList">
           <option value="">Select a pack</option>
         </select>
         <div class="actions">
-          <button id="load">Load draft</button
-          ><button id="new">New draft</button>
+          <button id="load">초안 열기</button
+          ><button id="new">새 기능 만들기</button>
           <button id="overlay">New personal overlay from loaded base</button>
         </div>
-        <p id="revisionStatus" role="status">No definition loaded</p>
-        <label for="restoreRevision"
-          >Stored revision to restore as inactive draft</label
+        <p id="packSummary" role="status">
+          기능을 선택하거나 새 초안을 만드세요.
+        </p>
+        <button
+          type="button"
+          data-disclosure="packAdvanced"
+          aria-expanded="false"
+          aria-controls="packAdvanced"
         >
-        <select id="restoreRevision">
-          <option value="">Load a pack first</option>
-        </select>
-        <div class="actions">
-          <button id="archivePack">Archive loaded pack</button>
-          <button id="unarchivePack">Return from archive · inactive</button>
-          <button id="restorePack">Restore selected revision · inactive</button>
-        </div>
-        <p class="note">
-          Versions remain preserved. Archiving a base does not disable
-          separately active pinned overlays. Restore does not undo website
-          changes.
-        </p>
-        <h2>Author a role and procedure</h2>
-        <div id="authorFields">
-          <label for="authorId">Pack ID</label><input id="authorId" />
-          <label for="authorName">Pack name</label><input id="authorName" />
-          <label for="authorVersion">Definition version</label
-          ><input id="authorVersion" value="0.1.0" />
-          <label for="authorOrigin"
-            >Origin · blank means global read library</label
-          ><input id="authorOrigin" placeholder="https://example.com" />
-          <label for="authorPath">Path prefix</label
-          ><input id="authorPath" value="/" />
-          <label for="authorRole">Role ID</label
-          ><input id="authorRole" value="target" />
-          <label for="authorSelector">Observed target selector</label
-          ><input id="authorSelector" />
-          <label for="authorExtract">Returned content</label
-          ><select id="authorExtract">
-            <option value="text">Bounded text</option>
-            <option value="link">Own link + bounded descendant title</option>
-            <option value="state">Control state</option>
+          고급 기능 작성·검사·실행
+        </button>
+        <div id="packAdvanced" hidden>
+          <p id="revisionStatus" role="status">No definition loaded</p>
+          <label for="restoreRevision"
+            >Stored revision to restore as inactive draft</label
+          >
+          <select id="restoreRevision">
+            <option value="">Load a pack first</option>
           </select>
-          <label for="authorCardinality">Role cardinality</label
-          ><select id="authorCardinality">
-            <option value="one">One exact target</option>
-            <option value="many">Many bounded items</option>
-          </select>
-          <label for="authorLimit">Many-item maximum · 1–100</label
-          ><input id="authorLimit" type="number" min="1" max="100" value="50" />
-          <label for="authorKind">Append a supported procedure step</label
-          ><select id="authorKind">
-            <option value="read">Read role only</option>
-            <option value="fill">Fill native field</option>
-            <option value="scroll">Scroll element</option>
-            <option value="click">Navigate ordinary link</option>
-          </select>
-          <label for="authorProcedure">Procedure ID</label
-          ><input id="authorProcedure" value="use-target" />
-          <label for="authorParameter"
-            >Named string parameter · fill value / exact navigation URL</label
-          ><input
-            id="authorParameter"
-            placeholder="query or linkUrl; optional"
-          />
-          <label for="authorValue">Literal fill text or scroll delta</label
-          ><input id="authorValue" value="" />
-          <label for="authorArrivalRole"
-            >Destination role · optional arrival check</label
-          ><input id="authorArrivalRole" value="arrival" />
-          <label for="authorArrivalSelector"
-            >Destination selector · blank keeps existing rule</label
-          ><input id="authorArrivalSelector" />
-          <label for="authorArrivalText"
-            >Exact observed destination text · optional</label
-          ><input id="authorArrivalText" />
-          <label for="authorArrivalCount"
-            >Maximum arrival observations · 1–8</label
-          ><input
-            id="authorArrivalCount"
-            type="number"
-            min="1"
-            max="8"
-            value="4"
-          />
-          <label for="authorArrivalMs">Arrival time budget · milliseconds</label
-          ><input
-            id="authorArrivalMs"
-            type="number"
-            min="100"
-            max="10000"
-            value="5000"
-          />
-        </div>
-        <button id="applyFields">Apply fields to unsaved draft</button>
-        <p>
-          Applying appends a step to the named procedure; it does not save or
-          activate. Advanced JSON remains available below. Existing base/scope
-          conditions are preserved.
-        </p>
-        <label for="editor">Definition · strict JSON</label
-        ><textarea
-          id="editor"
-          rows="16"
-          spellcheck="false"
-          placeholder="Propose from an observed target, or paste an exported definition."
-        ></textarea>
-        <p>
-          Save creates an inactive revision. Test reads the page again and
-          checks available locators; future roles and procedure outcomes remain
-          unverified. Activation is explicit. Edit the version before sharing
-          updates.
-        </p>
-        <div class="actions">
-          <button id="save" class="primary">Save draft</button
-          ><button id="test">Test current draft</button
-          ><button id="activate">Activate tested revision</button>
-          <button id="deactivate">Deactivate active revision</button>
-        </div>
-        <fieldset>
-          <legend>Explicit new-permission acknowledgement</legend>
-          <p id="permissionSummary">
-            Test or preview the draft to see additions.
+          <div class="actions">
+            <button id="archivePack">Archive loaded pack</button>
+            <button id="unarchivePack">Return from archive · inactive</button>
+            <button id="restorePack">
+              Restore selected revision · inactive
+            </button>
+          </div>
+          <p class="note">
+            Versions remain preserved. Archiving a base does not disable
+            separately active pinned overlays. Restore does not undo website
+            changes.
           </p>
-          <label><input id="ackRead" type="checkbox" /> read</label
-          ><label><input id="ackFill" type="checkbox" /> fill</label
-          ><label><input id="ackClick" type="checkbox" /> click</label
-          ><label><input id="ackScroll" type="checkbox" /> scroll</label>
-        </fieldset>
-        <div class="actions">
-          <button id="preview">Preview update</button
-          ><button id="import">Import as draft</button
-          ><button id="export">Export definition</button
-          ><button id="context">Check drift</button>
+          <h2>Author a role and procedure</h2>
+          <div id="authorFields">
+            <label for="authorId">Pack ID</label><input id="authorId" />
+            <label for="authorName">Pack name</label><input id="authorName" />
+            <label for="authorVersion">Definition version</label
+            ><input id="authorVersion" value="0.1.0" />
+            <label for="authorOrigin"
+              >Origin · blank means global read library</label
+            ><input id="authorOrigin" placeholder="https://example.com" />
+            <label for="authorPath">Path prefix</label
+            ><input id="authorPath" value="/" />
+            <label for="authorRole">Role ID</label
+            ><input id="authorRole" value="target" />
+            <label for="authorSelector">Observed target selector</label
+            ><input id="authorSelector" />
+            <label for="authorExtract">Returned content</label
+            ><select id="authorExtract">
+              <option value="text">Bounded text</option>
+              <option value="link">Own link + bounded descendant title</option>
+              <option value="state">Control state</option>
+            </select>
+            <label for="authorCardinality">Role cardinality</label
+            ><select id="authorCardinality">
+              <option value="one">One exact target</option>
+              <option value="many">Many bounded items</option>
+            </select>
+            <label for="authorLimit">Many-item maximum · 1–100</label
+            ><input
+              id="authorLimit"
+              type="number"
+              min="1"
+              max="100"
+              value="50"
+            />
+            <label for="authorKind">Append a supported procedure step</label
+            ><select id="authorKind">
+              <option value="read">Read role only</option>
+              <option value="fill">Fill native field</option>
+              <option value="scroll">Scroll element</option>
+              <option value="click">Navigate ordinary link</option>
+            </select>
+            <label for="authorProcedure">Procedure ID</label
+            ><input id="authorProcedure" value="use-target" />
+            <label for="authorParameter"
+              >Named string parameter · fill value / exact navigation URL</label
+            ><input
+              id="authorParameter"
+              placeholder="query or linkUrl; optional"
+            />
+            <label for="authorValue">Literal fill text or scroll delta</label
+            ><input id="authorValue" value="" />
+            <label for="authorArrivalRole"
+              >Destination role · optional arrival check</label
+            ><input id="authorArrivalRole" value="arrival" />
+            <label for="authorArrivalSelector"
+              >Destination selector · blank keeps existing rule</label
+            ><input id="authorArrivalSelector" />
+            <label for="authorArrivalText"
+              >Exact observed destination text · optional</label
+            ><input id="authorArrivalText" />
+            <label for="authorArrivalCount"
+              >Maximum arrival observations · 1–8</label
+            ><input
+              id="authorArrivalCount"
+              type="number"
+              min="1"
+              max="8"
+              value="4"
+            />
+            <label for="authorArrivalMs"
+              >Arrival time budget · milliseconds</label
+            ><input
+              id="authorArrivalMs"
+              type="number"
+              min="100"
+              max="10000"
+              value="5000"
+            />
+          </div>
+          <button id="applyFields">Apply fields to unsaved draft</button>
+          <p>
+            Applying appends a step to the named procedure; it does not save or
+            activate. Advanced JSON remains available below. Existing base/scope
+            conditions are preserved.
+          </p>
+          <label for="editor">Definition · strict JSON</label
+          ><textarea
+            id="editor"
+            rows="16"
+            spellcheck="false"
+            placeholder="Propose from an observed target, or paste an exported definition."
+          ></textarea>
+          <p>
+            Save creates an inactive revision. Test reads the page again and
+            checks available locators; future roles and procedure outcomes
+            remain unverified. Activation is explicit. Edit the version before
+            sharing updates.
+          </p>
+          <div class="actions">
+            <button id="save" class="primary">Save draft</button
+            ><button id="test">Test current draft</button
+            ><button id="activate">Activate tested revision</button>
+            <button id="deactivate">Deactivate active revision</button>
+          </div>
+          <fieldset>
+            <legend>Explicit new-permission acknowledgement</legend>
+            <p id="permissionSummary">
+              Test or preview the draft to see additions.
+            </p>
+            <label><input id="ackRead" type="checkbox" /> read</label
+            ><label><input id="ackFill" type="checkbox" /> fill</label
+            ><label><input id="ackClick" type="checkbox" /> click</label
+            ><label><input id="ackScroll" type="checkbox" /> scroll</label>
+          </fieldset>
+          <div class="actions">
+            <button id="preview">Preview update</button
+            ><button id="import">Import as draft</button
+            ><button id="export">Export definition</button
+            ><button id="context">Check drift</button>
+          </div>
+          <h2>Run an active procedure</h2>
+          <label for="procedure">Procedure ID</label
+          ><input id="procedure" placeholder="query" /><label for="arguments"
+            >Named string arguments · JSON object</label
+          ><textarea id="arguments" rows="3" spellcheck="false">{}</textarea
+          ><label for="operationId"
+            >Operation ID · keep for receipt lookup</label
+          ><input id="operationId" />
+          <div class="actions">
+            <button id="newOperation">New operation ID</button
+            ><button id="run">Run once</button
+            ><button id="receipt">Read receipt</button
+            ><button id="cancel">Request cancellation</button>
+          </div>
+          <p class="note">
+            Cancellation does not interrupt or roll back leased input. Possible
+            delivery remains unknown. Read the receipt; never retry unknown
+            input with a new ID. Later procedure steps stop.
+          </p>
+          <pre
+            id="packResult"
+            tabindex="0"
+            aria-label="Pack validation and conflicts"
+          ></pre>
         </div>
-        <h2>Run an active procedure</h2>
-        <label for="procedure">Procedure ID</label
-        ><input id="procedure" placeholder="query" /><label for="arguments"
-          >Named string arguments · JSON object</label
-        ><textarea id="arguments" rows="3" spellcheck="false">{}</textarea
-        ><label for="operationId">Operation ID · keep for receipt lookup</label
-        ><input id="operationId" />
-        <div class="actions">
-          <button id="newOperation">New operation ID</button
-          ><button id="run">Run once</button
-          ><button id="receipt">Read receipt</button
-          ><button id="cancel">Request cancellation</button>
-        </div>
-        <p class="note">
-          Cancellation does not interrupt or roll back leased input. Possible
-          delivery remains unknown. Read the receipt; never retry unknown input
-          with a new ID. Later procedure steps stop.
-        </p>
-        <pre
-          id="packResult"
-          tabindex="0"
-          aria-label="Pack validation and conflicts"
-        ></pre>
       </section>
     </main>
     <footer>
-      <p id="status" role="status" aria-live="polite">Not connected</p>
-      <span>SWU 0.5.0 · local development preview</span>
+      <span>SWU 0.6.0 · 미리보기</span>
     </footer>
     <script type="module" src="popup.js"></script>
   </body>

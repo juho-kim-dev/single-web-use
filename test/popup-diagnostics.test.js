@@ -29,6 +29,7 @@ test("popup shared handler shows fixed bilingual foreground guidance and retains
   globalThis.document = { getElementById: control, querySelectorAll: () => [] };
   globalThis.Option = class {};
   globalThis.chrome = {
+    windows: { getCurrent: async () => ({ id: 2 }) },
     runtime: {
       sendMessage: async (m) =>
         m.type === "status"

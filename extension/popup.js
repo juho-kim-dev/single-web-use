@@ -1,4 +1,5 @@
 import { editDefinition, createOverlay } from "./editor.js";
+import { createStatusPoller, describePanelStatus } from "./panel.js";
 import { connectionGuidance } from "./diagnostics.js";
 const $ = (id) => document.getElementById(id);
 let observation = null,
@@ -8,7 +9,8 @@ let observation = null,
   savedDefinition = null,
   formDirty = false,
   activeRevision = null,
-  lastReading = null;
+  lastReading = null,
+  connectionErrorText = null;
 const fields = [
   "id",
   "name",
@@ -108,15 +110,24 @@ async function send(message) {
 const api = (method, args = {}) => send({ type: "api", method, args });
 function report(value) {
   $("packResult").textContent = JSON.stringify(value, null, 2);
+  $("packSummary").textContent =
+    value.reason ??
+    (value.active
+      ? "기능이 활성화되었습니다."
+      : value.revision
+        ? "저장된 판본을 확인하세요."
+        : "결과를 고급 보기에서 확인하세요.");
 }
 function action(id, fn) {
   $(id).addEventListener("click", async () => {
     $(id).disabled = true;
     try {
       await fn();
-      $("status").textContent = "Done · review the result and evidence.";
+      $("status").textContent = "완료 · 결과와 근거를 확인하세요.";
     } catch (e) {
-      $("status").textContent = connectionGuidance(e.message);
+      const message = connectionGuidance(e.message);
+      $("status").textContent = message;
+      connectionErrorText = message !== e.message ? message : null;
     } finally {
       $(id).disabled = false;
     }
@@ -127,20 +138,34 @@ for (const button of document.querySelectorAll("[data-tab]"))
     for (const section of document.querySelectorAll("main > section"))
       section.hidden = section.id !== button.dataset.tab;
     for (const b of document.querySelectorAll("[data-tab]"))
-      b.setAttribute("aria-selected", String(b === button));
+      b.setAttribute("aria-pressed", String(b === button));
   });
-const status = await send({ type: "status" });
-$("identity").textContent = "Extension ID: " + status.extensionId;
-$("status").textContent = status.connected
-  ? "Connected to foreground tab"
-  : connectionGuidance(status.lastError ?? "Not connected");
+$("identity").textContent = "Extension ID: " + (chrome.runtime.id ?? "");
+// Initial worker failure must not prevent controls or visible-only polling from starting.
+void send({ type: "status" })
+  .then((status) => {
+    $("identity").textContent = "Extension ID: " + status.extensionId;
+    if (!$("status").textContent && status.lastError) {
+      connectionErrorText = connectionGuidance(status.lastError);
+      $("status").textContent = connectionErrorText;
+    }
+  })
+  .catch(() => {
+    if (!$("status").textContent)
+      connectionErrorText =
+        "상태 연결을 준비 중입니다. / Waiting for adapter status.";
+    if (!$("status").textContent) $("status").textContent = connectionErrorText;
+  });
 action("saveToken", async () => {
   if (!/^[a-f0-9]{64}$/.test($("token").value))
     throw Error("Expected 64 hexadecimal characters");
   await chrome.storage.local.set({ token: $("token").value });
   $("token").value = "";
 });
-action("bind", () => send({ type: "bind" }));
+action("bind", async () => {
+  const window = await chrome.windows.getCurrent();
+  return send({ type: "bind", windowId: window.id });
+});
 action("disconnect", () => send({ type: "disconnect" }));
 async function showControl(paused) {
   const result = await api("pause", { paused });
@@ -152,7 +177,7 @@ action("pauseRuntime", () => showControl(true));
 action("resumeRuntime", () => showControl(false));
 action("read", async () => {
   observation = await api("observe");
-  $("observation").textContent = JSON.stringify(observation, null, 2);
+  showReading(observation);
   $("targets").replaceChildren();
   for (const n of observation.nodes.filter((n) => n.locator)) {
     const b = document.createElement("button");
@@ -410,6 +435,15 @@ action("cancel", async () =>
 );
 const showReading = (value) => {
   $("observation").textContent = JSON.stringify(value, null, 2);
+  const rows = (value.items ?? value.reading?.items ?? value.nodes ?? [])
+    .slice(0, 100)
+    .map((item) => item.value?.text ?? item.text ?? "")
+    .filter(Boolean);
+  $("readingContent").textContent = rows.length
+    ? rows.join("\n\n")
+    : value.captures
+      ? `읽기 ${value.captures.length}회 · ${value.reason ?? "진행 중"} · 완독 여부 미확인`
+      : "관측된 본문이 없습니다. 누락·필터·가시 범위를 고급 근거에서 확인하세요.";
 };
 action("filteredRead", async () => {
   const packId = $("readPack").value;
@@ -631,3 +665,47 @@ action("pageReadCancel", async () =>
     await api("cancel", { operationId: $("pageReadOperation").value }),
   ),
 );
+
+for (const button of document.querySelectorAll("[data-disclosure]"))
+  button.addEventListener("click", () => {
+    const content = $(button.dataset.disclosure);
+    content.hidden = !content.hidden;
+    button.setAttribute("aria-expanded", String(!content.hidden));
+  });
+if (document.addEventListener && globalThis.addEventListener) {
+  const poller = createStatusPoller({
+    isVisible: () => document.visibilityState === "visible",
+    load: async () => {
+      const window = await chrome.windows.getCurrent();
+      return send({ type: "panelStatus", windowId: window.id });
+    },
+    onStatus: (s) => {
+      const view = describePanelStatus(s);
+      if (s.lastError && view.key !== "connected") {
+        connectionErrorText = connectionGuidance(s.lastError);
+        $("status").textContent = connectionErrorText;
+      } else if (connectionErrorText) {
+        if ($("status").textContent === connectionErrorText)
+          $("status").textContent = "";
+        connectionErrorText = null;
+      }
+      $("connectionState").textContent = view.label;
+      $("connectionHelp").textContent = view.detail;
+      $("currentPage").textContent =
+        view.key === "connected"
+          ? "연결된 전경 웹 페이지"
+          : "대상 탭 연결을 확인하세요";
+    },
+    onError: () => {
+      $("connectionState").textContent = "연결 상태를 확인할 수 없어요";
+      $("connectionHelp").textContent =
+        "Connector와 패널 상태를 확인하세요. 입력은 자동 재시도하지 않습니다.";
+      $("currentPage").textContent = "연결 상태 미확인";
+    },
+  });
+  document.addEventListener("visibilitychange", () =>
+    document.visibilityState === "visible" ? poller.start() : poller.stop(),
+  );
+  globalThis.addEventListener("pagehide", () => poller.stop(), { once: true });
+  poller.start();
+}

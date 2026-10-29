@@ -6,7 +6,7 @@ export const dataRoot = () =>
 export async function config() {
   return readJSON(path.join(dataRoot(), "connector.json"));
 }
-export async function call(method, args = {}) {
+export async function call(method, args = {}, { timeout = 120000 } = {}) {
   const c = await config();
   const response = await fetch(`http://127.0.0.1:${c.port}/api`, {
     method: "POST",
@@ -15,7 +15,7 @@ export async function call(method, args = {}) {
       authorization: `Bearer ${c.token}`,
     },
     body: JSON.stringify({ method, args }),
-    signal: AbortSignal.timeout(120000),
+    signal: AbortSignal.timeout(timeout),
   });
   const result = await response.json();
   if (result.error) throw Error(result.error);

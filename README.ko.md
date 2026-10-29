@@ -8,7 +8,12 @@ SWU는 **PAW(Personal AI Workspace)**의 브라우저 사용 구성요소입니�
 
 기존 SWU의 계약을 이어가는 별도 PAW 구현입니다. Nomiya를 교체하거나 Obsidian 볼트에 설치하지 않으며 저장 형식도 별개입니다. [Juho Kim](https://github.com/juho-kim-dev)이 AI의 도움을 받아 개발합니다.
 
-## 0.5.0 개발 검토 지점
+## 0.6.0 후보 검토 지점
+
+감독자 전체 검사100/100, 정적 검사·빌드와 격리된 실제 프로세스의 MCP 최초 시작·동시 시작·기존 런타임 재사용을 확인했습니다. 이 결과는 사용자 Chrome의 사이드바 연결·실제 사이트 읽기/스크롤 성공을 뜻하지 않습니다.
+
+
+Chrome 기본 사이드바와 명시 시작 도우미를0.6.0 후보로 연결했습니다. 첫 페어링 후 Windows 시작 아이콘을 실행하고 대상 웹 탭의 툴바를 누르면 패널을 열고 안전한 준비 상태에서만 연결을 시도합니다. 일시정지·전달 불명 fence·명시 연결 해제를 자동으로 해제하지 않습니다. MCP 시작은 Connector만 준비하며 브라우저를 열지 않습니다. [설치·시작·가드 계약](docs/sidebar-startup.md). 실제 설치본·읽기/스크롤과 팝업 포커스 가설은 아직 검증하지 않았습니다.
 
 팩 판본을 고정한 `pageRead`가 현재 컨테이너의 필터 읽기와 제한된 합성 요소 스크롤을 연결합니다. 진행 영수증·취소·시간/횟수/내용 예산을 제공하며 자동 저장이나 완독은 주장하지 않습니다. [읽기 계약](docs/page-reading.md).
 
@@ -43,7 +48,7 @@ npm run build
 
 ## MCP와 사용 skill
 
-같은 런타임을 유지하고 MCP 클라이언트에 `command: "node"`, `args: ["절대경로/src/cli.js", "mcp"]`의 stdio 서버를 등록합니다. 등록 방식은 해당 클라이언트 문서를 따릅니다. 일반 예시는 [영문 README](README.md)에 있으며 특정 AI 앱과의 연결 성공 근거는 아닙니다. 동봉한 [사용 skill](skills/swu/SKILL.md)은 에이전트의 지원 설치 방식으로 등록합니다. 인증·설정을 자동 변경하지 않습니다.
+MCP 시작은 같은 설정의 런타임 준비를 확인하고 필요할 때만 시작하며 Chrome은 열지 않습니다. MCP 클라이언트에 `command: "node"`, `args: ["절대경로/src/cli.js", "mcp"]`의 stdio 서버를 등록합니다. 등록 방식은 해당 클라이언트 문서를 따릅니다. 일반 예시는 [영문 README](README.md)에 있으며 특정 AI 앱과의 연결 성공 근거는 아닙니다. 동봉한 [사용 skill](skills/swu/SKILL.md)은 에이전트의 지원 설치 방식으로 등록합니다. 인증·설정을 자동 변경하지 않습니다.
 
 ## 개인 사이트팩 수명
 
@@ -75,3 +80,6 @@ JSON 편집기에서 사이트/전역·경로·조건 범위, 역할과 선택�
 `pageRead` connects a pinned active site pack, filtered current-container reading and guarded synthetic element scroll. Observe → Bounded container reading exposes ordinary role/mode/budget controls, progress receipts and cancellation. Use `packGet.activeEffectiveRevision` with the active revision; `operation` and `cancel` retain the same operation ID. [Contract, CLI/MCP setup and source comparison](docs/page-reading.md), [synthetic pack](examples/container-pack.json), [request template](examples/page-read.json). The example pins the unchanged synthetic fixture; edited definitions need both actual hashes from packGet.
 
 현재 위치에서 제한된 횟수만 읽고 이동하며, 캡처별 출처·범위·offset 변화와 읽기 경로를 보존합니다. 전체 완독·네이티브 휠·자동 저장은 주장하지 않습니다. 원문은 기존 보관 관측에서 읽고 필요할 때만 명시 저장합니다. 감독자가 소스 해시를 대조한 별도 작업본에서 일반 동시 실행 검사81/81·구문·빌드 통과를 확인했습니다. CLI의 MXC 환경에서는 loopback EACCES와 Chrome 시작 실패가 별도로 기록돼 있습니다. 버전0.5.0은 확장 설치·실사이트 통과나 릴리스를 뜻하지 않습니다.
+
+
+R34의 쉬운 시작·사이드바·상태 확인은0.6 후보 구현입니다. 자동 연결은 관측한 세션을 전달하고 런타임이 pause/fence/busy·기존 소유자를 동기 검사합니다. 응답하는0.5 등 호환되지 않는 소유자가 있으면 업데이트·명시 재시작이 필요하다고 알리고 종료·잠금 삭제·토큰 변경을 하지 않습니다. 소스 게시 승인과 설치·실사용 검증 주장은 구분하며 후자는 아직 주장하지 않습니다.

@@ -209,6 +209,102 @@ async function loop() {
     running = false;
   }
 }
+async function connectTab(tab, automatic = false, ownsAttempt = false) {
+  if (!ownsAttempt && connecting) throw Error("disconnect-before-rebind");
+  connecting = true;
+  let bound, automaticIntent;
+  const ticket = epoch;
+  try {
+    if (!tab || !Number.isInteger(tab.id) || !Number.isInteger(tab.windowId))
+      throw Error("connect-tab-not-found");
+    const candidate = { tabId: tab.id, windowId: tab.windowId };
+    if (!running) {
+      bound = candidate;
+      binding = bound;
+    }
+    await foreground(candidate);
+    if (ticket !== epoch) throw Error("binding-changed-during-connect");
+    if (automatic) {
+      const { userDisconnected } =
+        await chrome.storage.session.get("userDisconnected");
+      if (userDisconnected) throw Error("explicit-disconnect-retained");
+      let status;
+      try {
+        status = await request("/api", { method: "status", args: {} });
+      } catch (e) {
+        throw Error(
+          e.message === "pairing-token-required"
+            ? e.message
+            : "runtime-unavailable",
+        );
+      }
+      if (status.bindProtocol !== "guarded-auto-v1")
+        throw Error("runtime-update-restart-required");
+      automaticIntent = {
+        intent: "automatic",
+        observedSession: status.session,
+      };
+      if (status.paused) throw Error("runtime-paused");
+      if (status.fenced) throw Error("surface-fenced-rebind-required");
+      if (running && status.session !== session)
+        throw Error("automatic-bind-session-changed");
+    }
+    if (running) {
+      if (
+        binding?.tabId === candidate.tabId &&
+        binding?.windowId === candidate.windowId
+      )
+        return { connected: true };
+      throw Error("disconnect-before-rebind");
+    }
+    if (automatic) await foreground(bound);
+    if (binding !== bound || ticket !== epoch)
+      throw Error("binding-changed-during-connect");
+    const result = await request("/bridge/bind", {
+      ...bound,
+      ...automaticIntent,
+    });
+    if (typeof result?.session !== "string" || !result.session)
+      throw Error("binding-unconfirmed");
+    if (binding !== bound || ticket !== epoch)
+      throw Error("binding-changed-during-connect");
+    session = result.session;
+    documents.clear();
+    await chrome.storage.session.set({
+      userDisconnected: false,
+      lastError: null,
+    });
+    if (binding !== bound || session !== result.session)
+      throw Error("binding-changed-during-connect");
+    void loop();
+    return { connected: true };
+  } catch (e) {
+    if (bound && binding === bound) {
+      binding = null;
+      session = null;
+      documents.clear();
+    }
+    throw e;
+  } finally {
+    connecting = false;
+  }
+}
+chrome.action?.onClicked.addListener((tab) => {
+  // Chrome requires this call inside the toolbar gesture, before any await.
+  let opening;
+  try {
+    opening = chrome.sidePanel.open({ windowId: tab.windowId });
+  } catch {
+    void chrome.storage.session.set({ lastError: "side-panel-open-failed" });
+    return;
+  }
+  void Promise.resolve(opening)
+    .catch(() => {
+      throw Error("side-panel-open-failed");
+    })
+    .then(() => connectTab(tab, true))
+    .catch((e) => chrome.storage.session.set({ lastError: e.message }));
+});
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (
     sender.id !== chrome.runtime.id ||
@@ -225,50 +321,83 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       return result;
     }
     if (message.type === "bind") {
-      if (running || connecting) throw Error("disconnect-before-rebind");
+      if (!Number.isInteger(message.windowId))
+        throw Error("panel-window-required");
+      if (connecting) throw Error("disconnect-before-rebind");
       connecting = true;
-      const connectEpoch = epoch;
-      let bound;
+      const requestedEpoch = epoch;
       try {
         const tabs = await chrome.tabs
-          .query({ active: true, currentWindow: true })
+          .query({ active: true, windowId: message.windowId })
           .catch(() => {
             throw Error("connect-tab-query-failed");
           });
-        const tab = tabs?.[0];
-        if (
-          !tab ||
-          !Number.isInteger(tab.id) ||
-          !Number.isInteger(tab.windowId)
-        )
-          throw Error("connect-tab-not-found");
-        if (connectEpoch !== epoch)
+        if (requestedEpoch !== epoch)
           throw Error("binding-changed-during-connect");
-        bound = { tabId: tab.id, windowId: tab.windowId };
-        binding = bound;
-        await foreground(bound);
-        if (binding !== bound) throw Error("binding-changed-during-connect");
-        const result = await request("/bridge/bind", bound);
-        if (binding !== bound) throw Error("binding-changed-during-connect");
-        session = result.session;
-        documents.clear();
-        void loop();
-        return { connected: true };
-      } catch (e) {
-        if (bound && binding === bound) {
-          binding = null;
-          session = null;
-          documents.clear();
-        }
-        throw e;
+        return await connectTab(tabs?.[0], false, true);
       } finally {
         connecting = false;
+      }
+    }
+    if (message.type === "panelStatus") {
+      const { token } = await chrome.storage.local.get("token");
+      if (!/^[a-f0-9]{64}$/.test(token ?? ""))
+        return { paired: false, runtimeAvailable: false };
+      try {
+        const ownedSession = session,
+          ownedBinding = binding,
+          ownedEpoch = epoch;
+        const runtime = await request("/api", { method: "status", args: {} });
+        if (runtime.bindProtocol !== "guarded-auto-v1")
+          return {
+            paired: true,
+            runtimeAvailable: true,
+            runtime,
+            adapterOwned: false,
+            foregroundReady: false,
+            lastError: "runtime-update-restart-required",
+          };
+        let adapterOwned =
+          !!ownedSession &&
+          !!ownedBinding &&
+          runtime.session === ownedSession &&
+          runtime.binding?.tabId === ownedBinding.tabId &&
+          runtime.binding?.windowId === ownedBinding.windowId;
+        let foregroundReady = false;
+        if (adapterOwned && runtime.binding?.windowId === message.windowId) {
+          try {
+            await foreground(runtime.binding);
+            foregroundReady = true;
+          } catch {}
+        }
+        const flags = await chrome.storage.session.get([
+          "userDisconnected",
+          "lastError",
+        ]);
+        adapterOwned =
+          adapterOwned &&
+          session === ownedSession &&
+          binding === ownedBinding &&
+          epoch === ownedEpoch;
+        foregroundReady = foregroundReady && adapterOwned;
+        return {
+          paired: true,
+          adapterOwned,
+          userDisconnected: flags.userDisconnected === true,
+          runtimeAvailable: true,
+          lastError: flags.lastError,
+          runtime,
+          foregroundReady,
+        };
+      } catch {
+        return { paired: true, runtimeAvailable: false };
       }
     }
     if (message.type === "disconnect") {
       invalidate();
       session = null;
       binding = null;
+      await chrome.storage.session.set({ userDisconnected: true });
       await request("/bridge/disconnect", {});
       return { disconnected: true };
     }
