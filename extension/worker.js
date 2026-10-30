@@ -267,11 +267,17 @@ async function loop() {
                 }
               : { error: e.message };
         }
-        await request("/bridge/reply", {
-          session: activeSession,
-          id: command.id,
-          result,
-        });
+        try {
+          await request("/bridge/reply", {
+            session: activeSession,
+            id: command.id,
+            result,
+          });
+        } catch (e) {
+          // A timed-out/cancelled command can reply late without losing its browser owner.
+          if (e.message !== "late-or-unowned-reply") throw e;
+          documents.clear();
+        }
         if (retireReason && session === activeSession)
           await disconnectOwned(false, retireReason, activeSession);
       }

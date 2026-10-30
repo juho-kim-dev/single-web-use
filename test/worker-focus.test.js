@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { observation } from "./helpers.js";
 
-for (const scenario of ["activate", "already-ready", "activation-fails", "disconnect", "expired", "moved", "stale-action", "post-focus-loss"]) {
+for (const scenario of ["late-reply", "activate", "already-ready", "activation-fails", "disconnect", "expired", "moved", "stale-action", "post-focus-loss"]) {
   test(`command activation: ${scenario}`, async () => {
     const saved = { chrome: globalThis.chrome, fetch: globalThis.fetch };
     let listener, send, activateEvent, focusEvent, dispatch = false, reply;
@@ -42,7 +42,10 @@ for (const scenario of ["activate", "already-ready", "activation-fails", "discon
       let result = {};
       if (route === "/bridge/bind") result = { session };
       if (route === "/bridge/poll") result = { command: dispatch ? queue.shift() ?? null : null };
-      if (route === "/bridge/reply") reply = JSON.parse(options.body).result;
+      if (route === "/bridge/reply") {
+        reply = JSON.parse(options.body).result;
+        if (scenario === "late-reply") return { json: async () => ({ error: "late-or-unowned-reply" }) };
+      }
       if (route === "/api") result = { bindProtocol: "guarded-auto-v1", connected: true, session, binding: { tabId: 1, windowId: 2 } };
       return { json: async () => ({ result }) };
     };
@@ -67,10 +70,15 @@ for (const scenario of ["activate", "already-ready", "activation-fails", "discon
       queue.push(queued); dispatch = true;
       for (let i = 0; i < 150 && !reply; i++) await new Promise((r) => setTimeout(r, 10));
       assert.ok(reply, "command replied");
-      if (["activate", "already-ready"].includes(scenario)) {
+      if (["late-reply", "activate", "already-ready"].includes(scenario)) {
         assert.deepEqual(scripts, ["observe"]); assert.equal(reply.id, o.id);
         assert.equal(active && focused && state === "normal", true);
-        assert.equal(updates.length, scenario === "activate" ? 3 : 0);
+        assert.equal(updates.length, scenario === "already-ready" ? 0 : 3);
+        if (scenario === "late-reply") {
+          await new Promise((r) => setTimeout(r, 300));
+          const status = (await send({ type: "panelStatus", windowId: 2 })).result;
+          assert.equal(status.adapterOwned, true, "late reply must preserve local connection");
+        }
       } else if (scenario === "post-focus-loss") {
         assert.equal(scripts.length, 1); assert.match(reply.error, /changed|unfocused/);
         assert.equal(updates.length, 0, "no post-dispatch focus recovery/replay");
