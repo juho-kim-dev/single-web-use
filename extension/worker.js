@@ -23,7 +23,7 @@ async function request(route, body) {
   if (result.error) throw Error(result.error);
   return result.result;
 }
-async function foreground(bound, requireFocus = true) {
+async function foreground(bound, requireFocus = true, diagnostic = null) {
   if (!bound) throw Error("tab-not-bound");
   const tab = await chrome.tabs.get(bound.tabId).catch((e) => {
     throw Error(
@@ -43,6 +43,11 @@ async function foreground(bound, requireFocus = true) {
     if (!window.focused) throw Error("bound-window-unfocused");
     if (window.state === "minimized") throw Error("bound-window-minimized");
   }
+  if (diagnostic)
+    await request("/bridge/diagnostic", {
+      ...diagnostic,
+      queriedUrlPresent: typeof tab.url === "string" && !!tab.url,
+    }).catch(() => {});
   if (typeof tab.url !== "string" || !tab.url)
     throw Error("bound-tab-url-unavailable");
   if (!/^https?:/.test(tab.url)) throw Error("bound-tab-url-not-http");
@@ -303,7 +308,10 @@ async function connectTab(tab, automatic = false, ownsAttempt = false) {
       bound = candidate;
       binding = bound;
     }
-    await foreground(candidate);
+    await foreground(candidate, true, {
+      source: automatic ? "toolbar" : "sidebar",
+      eventUrlPresent: typeof tab.url === "string" && !!tab.url,
+    });
     if (ticket !== epoch) throw Error("binding-changed-during-connect");
     if (automatic) {
       const { userDisconnected } =

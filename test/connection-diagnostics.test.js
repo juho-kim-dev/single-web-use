@@ -93,7 +93,7 @@ test("worker foreground diagnostics distinguish refusals without bind traffic/sc
     };
     globalThis.fetch = async (url, options) => {
       const route = new URL(url).pathname;
-      network.push({ route, body: JSON.parse(options.body) });
+      if (route !== "/bridge/diagnostic") network.push({ route, body: JSON.parse(options.body) });
       if (route === "/bridge/poll") {
         await pollGate;
         throw Error("fixture-stop");
@@ -192,7 +192,7 @@ for (const phase of ["query", "foreground"]) {
       },
     };
     globalThis.fetch = async (url) => {
-      routes.push(new URL(url).pathname);
+      if (new URL(url).pathname !== "/bridge/diagnostic") routes.push(new URL(url).pathname);
       return { json: async () => ({ result: {} }) };
     };
     await import("../extension/worker.js?diagnostics-overlap-" + phase);

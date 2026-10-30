@@ -782,6 +782,7 @@ export class Runtime {
       return {
         version: "0.6.1",
         lastDisconnect: this.lastDisconnect,
+        adapterDiagnostic: this.adapterDiagnostic ?? null,
         bindProtocol: "guarded-auto-v1",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,

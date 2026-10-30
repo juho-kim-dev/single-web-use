@@ -89,6 +89,16 @@ export function createServer(runtime, config) {
           case "/bridge/bind":
             result = runtime.bind(bindingSchema.parse(data));
             break;
+          case "/bridge/diagnostic": {
+            const diagnostic = z.object({
+              source: z.enum(["toolbar", "sidebar"]),
+              eventUrlPresent: z.boolean(),
+              queriedUrlPresent: z.boolean(),
+            }).strict().parse(data);
+            runtime.adapterDiagnostic = { ...diagnostic, at: Date.now() };
+            result = { recorded: true };
+            break;
+          }
           case "/bridge/poll":
             result = runtime.poll(
               z.object({ session: z.string().uuid() }).strict().parse(data)
