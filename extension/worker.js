@@ -23,7 +23,7 @@ async function request(route, body) {
   if (result.error) throw Error(result.error);
   return result.result;
 }
-async function foreground(bound) {
+async function foreground(bound, requireFocus = true) {
   if (!bound) throw Error("tab-not-bound");
   const tab = await chrome.tabs.get(bound.tabId).catch((e) => {
     throw Error(
@@ -37,34 +37,64 @@ async function foreground(bound) {
     throw Error("bound-window-unavailable");
   });
   if (!window) throw Error("bound-window-unavailable");
-  if (!tab.active) throw Error("bound-tab-inactive");
   if (tab.windowId !== bound.windowId) throw Error("bound-tab-window-mismatch");
-  if (!window.focused) throw Error("bound-window-unfocused");
-  if (window.state === "minimized") throw Error("bound-window-minimized");
+  if (requireFocus) {
+    if (!tab.active) throw Error("bound-tab-inactive");
+    if (!window.focused) throw Error("bound-window-unfocused");
+    if (window.state === "minimized") throw Error("bound-window-minimized");
+  }
   if (typeof tab.url !== "string" || !tab.url)
     throw Error("bound-tab-url-unavailable");
   if (!/^https?:/.test(tab.url)) throw Error("bound-tab-url-not-http");
-  return tab;
+  return { tab, window };
+}
+async function activateTarget(bound, guard) {
+  const { tab, window } = await foreground(bound, false);
+  guard();
+  if (!tab.active || !window.focused || window.state === "minimized")
+    documents.clear();
+  if (window.state === "minimized") {
+    await chrome.windows.update(bound.windowId, { state: "normal" }).catch(() => {
+      throw Error("bound-window-activation-failed");
+    });
+    guard();
+  }
+  if (!tab.active) {
+    await chrome.tabs.update(bound.tabId, { active: true }).catch(() => {
+      throw Error("bound-tab-activation-failed");
+    });
+    guard();
+  }
+  if (!window.focused || window.state === "minimized") {
+    await chrome.windows.update(bound.windowId, { focused: true }).catch(() => {
+      throw Error("bound-window-activation-failed");
+    });
+    guard();
+  }
+  await foreground(bound);
+  guard();
 }
 async function execute(command, retire) {
   let injected = false;
   const bound = binding,
     ownedSession = session;
   try {
-    const ownedEpoch = epoch;
+    let ownedEpoch;
     const guard = () => {
       if (
         !bound ||
         binding !== bound ||
         session !== ownedSession ||
         command.session !== ownedSession ||
-        epoch !== ownedEpoch ||
+        (ownedEpoch !== undefined && epoch !== ownedEpoch) ||
         Date.now() > command.deadline
       )
         throw Error("command-expired-or-binding-changed");
     };
     guard();
-    await foreground(bound);
+    // Activation invalidates old input references; only a new observation may use the new epoch.
+    await activateTarget(bound, guard);
+    ownedEpoch = epoch;
     guard();
     const context = {
       ...bound,

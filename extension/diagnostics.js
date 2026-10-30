@@ -1,5 +1,9 @@
 // Fixed guidance only: never append page URLs, titles, tokens or browser API details.
 const guidance = {
+  "bound-window-activation-failed":
+    "대상 창 자동 활성화에 실패했습니다. 창 상태를 확인하세요. 입력을 자동 재전송하지 않습니다. / Window activation failed; inspect the window. No automatic input retry.",
+  "bound-tab-activation-failed":
+    "대상 탭 자동 활성화에 실패했습니다. 연결 상태를 확인하세요. / Tab activation failed; inspect the binding.",
   "runtime-update-restart-required":
     "Connector 업데이트·명시 재시작이 필요합니다. 기존 런타임이나 잠금을 자동 변경하지 않습니다. / Update and explicitly restart the Connector; its owner and lock are left unchanged.",
   "automatic-bind-session-changed":
@@ -48,13 +52,13 @@ const guidance = {
   "bound-window-unavailable":
     "대상 창을 확인할 수 없습니다. 해당 창이 열려 있는지 확인하세요. / The intended window is unavailable; check that it is still open.",
   "bound-tab-inactive":
-    "대상 탭을 직접 선택한 뒤 확장을 다시 여세요. / Select the intended tab manually, then reopen the extension.",
+    "대상 탭이 비활성 상태입니다. 화면 작업 요청 시 자동 활성화 후 재확인합니다. / A live command activates and rechecks the inactive target tab.",
   "bound-tab-window-mismatch":
     "탭의 창이 바뀌었습니다. 대상 창에서 명시적으로 다시 연결하세요. / The tab changed windows; explicitly reconnect from its current window.",
   "bound-window-unfocused":
-    "대상 Chrome 창을 직접 전경으로 가져온 뒤 다시 확인하세요. / Bring the intended Chrome window to the foreground manually, then check again.",
+    "대상 창에 포커스가 없습니다. 화면 작업 요청 시 자동 활성화 후 재확인합니다. / A live command activates and rechecks the unfocused target window.",
   "bound-window-minimized":
-    "대상 창의 최소화를 직접 해제하세요. / Restore the intended window manually.",
+    "대상 창이 최소화되어 있습니다. 화면 작업 요청 시 복원 후 재확인합니다. / A live command restores and rechecks the minimized window.",
   "bound-tab-url-unavailable":
     "탭 주소가 제공되지 않았습니다. 대상 웹 탭에서 확장을 다시 열어 확인하세요. 권한은 자동 변경되지 않습니다. / The tab URL was not supplied; reopen the extension on the intended web tab. Permissions are not changed automatically.",
   "bound-tab-url-not-http":
