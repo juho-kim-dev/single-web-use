@@ -60,7 +60,7 @@ const guidance = {
   "bound-window-minimized":
     "대상 창이 최소화되어 있습니다. 화면 작업 요청 시 복원 후 재확인합니다. / A live command restores and rechecks the minimized window.",
   "bound-tab-url-unavailable":
-    "탭 주소가 제공되지 않았습니다. 대상 웹 탭에서 확장을 다시 열어 확인하세요. 권한은 자동 변경되지 않습니다. / The tab URL was not supplied; reopen the extension on the intended web tab. Permissions are not changed automatically.",
+    "대상 웹 탭에서 Chrome 상단의 SWU 툴바 아이콘 자체를 누른 뒤 연결하세요. 사이드바 내부 연결 버튼은 탭 접근 권한을 부여하지 않습니다. / Click the SWU toolbar action on the intended web tab, then connect. The sidebar Connect button does not grant activeTab access.",
   "bound-tab-url-not-http":
     "일반 HTTP(S) 웹 탭에서 연결하세요. / Connect from an ordinary HTTP(S) web tab.",
   "disconnect-before-rebind":
