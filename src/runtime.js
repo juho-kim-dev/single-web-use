@@ -31,6 +31,7 @@ export class Runtime {
     this.inFlight = new Map();
     this.children = new Map();
     this.lastPoll = 0;
+    this.lastDisconnect = null;
     this.readingProgress = new Map();
     this.paused = store.data.paused === true;
     this.pauseEpoch = 0;
@@ -90,6 +91,7 @@ export class Runtime {
     if (this.pending?.leased && this.pending.command.kind === "act")
       this.fenced = true;
     if (this.pending) this.pending.reject(Error(reason));
+    this.lastDisconnect = { at: Date.now(), reason };
     this.pending = null;
     this.session = null;
     this.binding = null;
@@ -779,6 +781,8 @@ export class Runtime {
     if (method === "status")
       return {
         version: "0.6.1",
+        lastDisconnect: this.lastDisconnect,
+        adapterDiagnostic: this.adapterDiagnostic ?? null,
         bindProtocol: "guarded-auto-v1",
         connected: !!this.session && Date.now() - this.lastPoll < 5000,
         binding: this.binding,

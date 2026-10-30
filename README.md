@@ -8,6 +8,8 @@ SWU is the browser-use component of **PAW, Personal AI Workspace**. It observes 
 
 This independent PAW derivative continues earlier SWU work. It does not replace Nomiya, install into an Obsidian vault, or share its data format. Developed by [Juho Kim](https://github.com/juho-kim-dev) with AI assistance.
 
+**Pending automatic-focus change:** [behavior, checks and live acceptance](docs/automatic-focus.md). Source checks do not establish installed/live success.
+
 ## Development checkpoint · 0.6.1 patch
 
 The0.6.1 supervisor full suite passed113/113 with0 failures/0 skips, syntax/build and isolated real-process cold/concurrent MCP startup. This patch retires missing/replaced tab ownership safely; installed verification of that repair is still pending.
@@ -51,7 +53,7 @@ node src/cli.js start
 
 Initialization creates `~/.paw-swu/connector.json` once, without printing the token. `SWU_HOME` can select a private directory outside the checkout. Open that file locally and copy **only its token** into the extension's Connect panel, then **Save token**. Never put it in chat, screenshots, commits or shared logs. On Windows, use your private user profile; POSIX file modes alone do not set a Windows ACL.
 
-On an ordinary HTTP(S) page, open the extension and select **Connect current tab**. Keep that tab active in its focused browser window. Keep the connector terminal running. From another terminal:
+On an ordinary HTTP(S) page, open the extension and select **Connect current tab**. Live commands activate the bound tab/window and recheck it; status and saved reads do not change focus. After a focus change, obtain a fresh observation before input. Keep the connector terminal running. From another terminal:
 
 ```sh
 node src/cli.js status

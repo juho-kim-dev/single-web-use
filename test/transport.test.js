@@ -35,6 +35,15 @@ test("actual HTTP transport authenticates bridge, rejects website/Host/token and
     ).status,
     403,
   );
+  const diagnosticHeaders = { origin: `chrome-extension://${config.extensionId}`, "x-swu-extension": config.extensionId };
+  const diagnostic = { source: "toolbar", eventUrlPresent: true, queriedUrlPresent: false };
+  assert.equal((await post("/bridge/diagnostic", diagnostic)).status, 400);
+  assert.equal((await post("/bridge/diagnostic", { ...diagnostic, url: "private" }, diagnosticHeaders)).status, 400);
+  assert.equal((await post("/bridge/diagnostic", diagnostic, diagnosticHeaders)).status, 200);
+  const diagnosticStatus = (await (await post("/api", { method: "status", args: {} })).json()).result;
+  assert.equal(diagnosticStatus.adapterDiagnostic.source, "toolbar");
+  assert.equal(diagnosticStatus.adapterDiagnostic.queriedUrlPresent, false);
+  assert.equal(Object.hasOwn(diagnosticStatus.adapterDiagnostic, "url"), false);
   const badHost = await new Promise((resolve, reject) => {
     const r = http.request(
       base + "/api",

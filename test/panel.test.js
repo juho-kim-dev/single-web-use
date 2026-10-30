@@ -79,3 +79,14 @@ test("panel status distinguishes setup, unavailable, target, connected, explicit
     "fenced",
   );
 });
+
+test("background-owned target remains connected without claiming foreground readiness", () => {
+  const s = { paired: true, runtimeAvailable: true, adapterOwned: true,
+    foregroundReady: false, lastError: "bound-window-unfocused",
+    runtime: { connected: true, binding: { tabId: 1 } } };
+  assert.equal(describePanelStatus(s).key, "connected-background");
+  assert.equal(describePanelStatus({ ...s, adapterOwned: false }).key, "target-needed");
+  assert.equal(describePanelStatus({ ...s, lastError: "bound-tab-window-mismatch" }).key, "target-needed");
+  assert.equal(describePanelStatus({ ...s, runtime: { ...s.runtime, paused: true } }).key, "paused");
+  assert.equal(describePanelStatus({ ...s, runtime: { ...s.runtime, fenced: true } }).key, "fenced");
+});

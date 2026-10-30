@@ -134,3 +134,14 @@ test("two CLI clients serialize same-surface observations and retain independent
   await two;
   assert.equal(runtime.observations.size, 2);
 });
+
+test("disconnect diagnostics retain time/reason and do not expose a rejected newer owner", async (t) => {
+  const { runtime, session } = await fixture(t);
+  runtime.disconnect("browser-disconnected", session);
+  const status = await runtime.call("status", {});
+  assert.equal(status.connected, false);
+  assert.equal(status.lastDisconnect.reason, "browser-disconnected");
+  assert.ok(Number.isFinite(status.lastDisconnect.at));
+  assert.throws(() => runtime.disconnect("wrong-owner", session), /disconnect-session-changed/);
+  assert.deepEqual((await runtime.call("status", {})).lastDisconnect, status.lastDisconnect);
+});

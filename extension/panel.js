@@ -41,6 +41,15 @@ export function describePanelStatus(s) {
       detail:
         "현재 보이는 내용을 읽을 수 있어요. 입력은 별도 가드로 검사합니다.",
     };
+  if (
+    s.runtime.connected && s.runtime.binding && s.adapterOwned === true &&
+    ["bound-tab-inactive", "bound-window-unfocused", "bound-window-minimized"].includes(s.lastError)
+  )
+    return {
+      key: "connected-background",
+      label: "대상 탭에 연결됨",
+      detail: "화면 작업 시 대상 창과 탭을 자동 활성화합니다. 저장 자료는 그대로 읽을 수 있어요.",
+    };
   return {
     key: "target-needed",
     label: "사용할 탭을 선택해 주세요",

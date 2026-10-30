@@ -53,7 +53,7 @@ Supervisor corrections have direct regressions: bounded text (`browser.test.js`)
 | R25 | Ordinary role/scope/procedure fields, exact revision testing, active/draft status, drift/conflicts, deactivate | `extension/editor.js`, popup fields and runtime APIs; draft transform + lifecycle tests; actual extension visual/accessibility QA remains blocked/unverified |
 | R26 | Important legacy API families with exact functions, implementation and gaps | [legacy-parity.md](legacy-parity.md), inspected read-only Nomiya `fcfbe5a`; code presence distinct from historical/live success |
 | R27 | New personal ability on shared read base, explicit permission acknowledgement, global→site narrowing | Packs.compose/addedPermissions/recordTest/activate/preview, popup overlay/permission controls; read-only base retained unchanged, scope widening and condition-role replacement still rejected; `reading.test.js` |
-| R28 | Known pre-injection refusal vs possible execution | worker.execute phase flag; missing binding/focus/disconnect → not-sent, scripting invocation/post-failure → unknown; `worker.test.js`; no silent focus takeover |
+| R28 | Known pre-injection refusal vs possible execution | worker.execute phase flag; missing binding/focus/disconnect → not-sent, scripting invocation/post-failure → unknown; `worker.test.js`; command-scoped activation per the 2026-10-30 user request; passive status never takes focus |
 
 Remaining functionality and blocked live verification are separated by API family in the Korean summary at the end of the parity table. No broad deferral statement substitutes for that mapping.
 
@@ -108,3 +108,7 @@ Reviewed source publication is user-authorized; installed/live checks are gates 
 0.6.1 adds owned removal/replacement and definitively missing-target retirement, shared manual/lifecycle cleanup and strict expected-session bridge disconnect. Old loop/bind continuations cannot retire a newer owner. Foreground guards and before/after injection uncertainty remain; leased input loss preserves the fence. Transient tab-query failure refuses readiness without claiming closure. No permissions, dependencies, services, profile access or automatic target replacement are added.
 
 Supervisor-reported installed/live evidence before this patch: sidebar opened; Google observe35 nodes/846 visited/no truncation; retained filtered read47 items across four bounded pages; no input. Later two fresh observe failures used `bound-tab-unavailable` with stale connected heartbeat. Cause unknown; no scroll candidate or successful live scroll. Current patch installed/live/full-suite/Graphify verification belongs to the supervisor. This worker does not claim those checks or prevent authorized reviewed source publication.
+
+## R35 · Command-scoped target activation
+
+Live commands restore a minimized bound window, activate its existing tab and focus the window, then verify active/focused/window/HTTP(S) again. Retained reading, preservation and status never activate. No new target, automatic bind/resume or permission grant. Old input references are invalidated by activation; callers need a fresh observation. [Contract and acceptance](automatic-focus.md).

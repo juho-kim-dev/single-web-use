@@ -147,3 +147,7 @@ Supervisor follow-up repair: cleanup uses distinct strict `/bridge/disconnect-ow
 ## Supervisor final validation · 2026-10-29 · 0.6.1
 
 Final source check/build PASS; full suite113/113 PASS,0fail/0skip, including the four process/HTTP/synthetic-Chrome tests excluded from the worker selection. Isolated real-process cold MCP plus two concurrent starts and later reuse PASS at version0.6.1; no token output. Diff whitespace check PASS. No new permissions/dependencies, live inputs or private capture publication occurred in these checks. Installed patch behavior and live scroll remain pending; previous0.6.0 Google observation/read is recorded above, not promoted to0.6.1 lifecycle success.
+
+## 2026-10-30 automatic-focus source checkpoint
+
+See [automatic-focus acceptance](automatic-focus.md): full122/122, syntax/build passed; final panel restriction3/3 passed and build refreshed. Installed extension reload and real-site read/scroll/save/read-back remain pending. No storage/schema migration or CI execution. Do not reuse Nomiya live checks as PAW evidence.

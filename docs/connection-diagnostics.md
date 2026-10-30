@@ -28,3 +28,7 @@ The shared disconnect path clears local session/binding/document references imme
 Historical descriptions above refer to their source checkpoints. Later supervisor live evidence established sidebar opening and bounded Google observe/read only; subsequent unavailable-tab cause remains unconfirmed, and scrolling remains unverified.
 
 Compatibility boundary: the new owned route is intentionally distinct from the old0.6 unconditional `/bridge/disconnect`. Unsupported cleanup is reported as unconfirmed; no fallback is sent. When a command detects missing target before injection, its known refusal is delivered before cleanup. A failed/lost reply remains unknown/fenced. Event-driven target loss during possible input remains conservative.
+
+## 2026-10-30 automatic-focus follow-up
+
+The earlier manual-focus descriptions are historical. Live commands now activate only their existing bound tab/window, recheck before dispatch, and preserve post-dispatch uncertainty. Status and retained/saved reading stay passive; reconnect, resume and stale-input recovery remain explicit. [Behavior, regression and installed/live status](automatic-focus.md). This follows the user-requested usability work before further capability expansion.
